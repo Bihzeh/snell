@@ -92,8 +92,11 @@ class LaunchBuilder(private val platform: Platform = Platform.current()) {
                 else -> {}
             }
         }
-        // Defensive: drop any token with an unresolved placeholder.
-        return out.filterNot { it.contains("\${") }
+        // Defensive: drop tokens with unresolved placeholders, but make the gap visible
+        // (Mojang occasionally adds new ${...} variables between versions).
+        val (ok, dropped) = out.partition { !it.contains("\${") }
+        if (dropped.isNotEmpty()) System.err.println("Maeve: dropped launch args with unresolved placeholders: $dropped")
+        return ok
     }
 
     private fun expand(s: String, vars: Map<String, String>): String {

@@ -20,7 +20,7 @@ class AssetProvisioner(private val net: Net, private val paths: MaevePaths) {
                 sem.withPermit {
                     val sub = obj.hash.substring(0, 2)
                     val dest = paths.assetObjects.resolve(sub).resolve(obj.hash)
-                    net.download("${MojangMeta.RESOURCES}/$sub/${obj.hash}", dest, obj.hash, obj.size)
+                    net.download("${MojangMeta.RESOURCES}/$sub/${obj.hash}", dest, sha1 = obj.hash, size = obj.size)
                     val n = done.incrementAndGet()
                     if (n % 250 == 0) onStatus("Assets $n/$total")
                 }

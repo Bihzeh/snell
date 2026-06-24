@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,12 +26,11 @@ import androidx.compose.ui.window.rememberWindowState
 import gg.maeve.launcher.game.GameSession
 import gg.maeve.launcher.game.Launcher
 import gg.maeve.shared.Versions
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.swing.SwingUtilities
 
 /** Dev convenience: find the locally-built Maeve mod jar to bundle when launching
  *  from the repo (gradle run). In a packaged build this returns null until the mod
@@ -58,7 +58,7 @@ fun main() = application {
 
 @Composable
 private fun App() {
-    val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    val scope = rememberCoroutineScope() // tied to composition; cancelled on window close
     var session by remember { mutableStateOf<GameSession?>(null) }
     var status by remember { mutableStateOf("Not signed in") }
     var launching by remember { mutableStateOf(false) }
@@ -91,13 +91,13 @@ private fun App() {
                             val proc = Launcher().launch(
                                 session = s,
                                 localMaeveMod = defaultMaeveMod(),
-                                onStatus = { status = it },
-                                onLog = { line -> log.add(line); if (log.size > 300) log.removeAt(0) },
+                                onStatus = { s -> SwingUtilities.invokeLater { status = s } },
+                                onLog = { line -> SwingUtilities.invokeLater { log.add(line); if (log.size > 300) log.removeAt(0) } },
                             )
                             proc.waitFor()
-                            status = "Game exited (code ${proc.exitValue()})"
-                        }.onFailure { status = "Error: ${it.message}" }
-                        launching = false
+                            SwingUtilities.invokeLater { status = "Game exited (code ${proc.exitValue()})" }
+                        }.onFailure { e -> SwingUtilities.invokeLater { status = "Error: ${e.message}" } }
+                        SwingUtilities.invokeLater { launching = false }
                     }
                 },
             ) {

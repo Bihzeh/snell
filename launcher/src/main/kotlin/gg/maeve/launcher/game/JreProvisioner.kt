@@ -1,9 +1,12 @@
 package gg.maeve.launcher.game
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 import kotlin.io.path.exists
 import kotlin.io.path.isExecutable
@@ -12,7 +15,12 @@ import kotlin.io.path.name
 @Serializable
 data class AdoptiumRelease(val binaries: List<Binary> = emptyList()) {
     @Serializable data class Binary(@SerialName("package") val pkg: Pkg)
-    @Serializable data class Pkg(val name: String, val link: String)
+    @Serializable data class Pkg(
+        val name: String,
+        val link: String,
+        val checksum: String? = null, // sha256
+        val size: Long? = null,
+    )
 }
 
 /** Ensures a Temurin 25 JRE is available to run the game; returns the java path. */
@@ -24,8 +32,12 @@ class JreProvisioner(private val net: Net, private val paths: MaevePaths) {
         val rel = LauncherJson.decodeFromString<List<AdoptiumRelease>>(net.text(apiUrl(platform)))
         val pkg = rel.firstOrNull()?.binaries?.firstOrNull()?.pkg ?: error("No Temurin 25 JRE for $platform")
         val archive = paths.jre.resolve(pkg.name)
-        net.download(pkg.link, archive)
-        extract(archive, paths.jre)
+        net.download(pkg.link, archive, sha256 = pkg.checksum, size = pkg.size)
+        try {
+            extract(archive, paths.jre)
+        } finally {
+            Files.deleteIfExists(archive)
+        }
         return findJava() ?: error("java not found after extracting ${pkg.name}")
     }
 
@@ -37,15 +49,20 @@ class JreProvisioner(private val net: Net, private val paths: MaevePaths) {
         }?.also { runCatching { if (!it.isExecutable()) it.toFile().setExecutable(true) } }
     }
 
-    private fun extract(archive: Path, dest: Path) {
+    private suspend fun extract(archive: Path, destDir: Path) = withContext(Dispatchers.IO) {
+        val dest = destDir.normalize()
         if (archive.name.endsWith(".zip")) {
             ZipInputStream(Files.newInputStream(archive)).use { zip ->
                 var e = zip.nextEntry
                 while (e != null) {
                     val out = dest.resolve(e.name).normalize()
                     require(out.startsWith(dest)) { "Zip slip: ${e.name}" }
-                    if (e.isDirectory) Files.createDirectories(out)
-                    else { Files.createDirectories(out.parent); Files.copy(zip, out, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+                    if (e.isDirectory) {
+                        Files.createDirectories(out)
+                    } else {
+                        Files.createDirectories(out.parent)
+                        Files.copy(zip, out, StandardCopyOption.REPLACE_EXISTING)
+                    }
                     e = zip.nextEntry
                 }
             }

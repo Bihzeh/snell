@@ -21,6 +21,13 @@ class MaevePaths(val root: Path) {
     fun natives(instanceId: String): Path = instance(instanceId).resolve("natives")
     fun clientJar(version: String): Path = versions.resolve(version).resolve("$version.jar")
 
+    /** Resolve a relative artifact path under [libraries], rejecting traversal (e.g. "../"). */
+    fun safeLibrary(relative: String): Path {
+        val resolved = libraries.resolve(relative).normalize()
+        require(resolved.startsWith(libraries.normalize())) { "Path traversal in library coordinate: $relative" }
+        return resolved
+    }
+
     fun ensureBase() {
         listOf(assetObjects, assetIndexes, libraries, versions, jre).forEach { it.createDirectories() }
     }
