@@ -1,12 +1,11 @@
-// Fabric mod for Minecraft 26.1.
+// Fabric mod for Minecraft 26.2.
 //
-// IMPORTANT — 26.1 build model (verified June 2026, docs.fabricmc.net/develop/porting):
-//   * Minecraft jars now ship UNOBFUSCATED. Loom no longer remaps.
-//   * Use the no-remap `net.fabricmc.fabric-loom` plugin (NOT the old `fabric-loom`).
-//   * Do NOT declare a `mappings(...)` dependency (Mojang mappings are built in).
-//   * Use plain `implementation`/`compileOnly` (NOT `modImplementation`/`modCompileOnly`).
+// 26.x build model (verified June 2026 against the Fabric example-mod 26.2 branch
+// and docs.fabricmc.net/develop/porting): Minecraft jars ship UNOBFUSCATED.
+//   * Plugin id is `net.fabricmc.fabric-loom` (the no-remap Loom).
+//   * NO mappings(...) dependency.
+//   * Plain `implementation` (NOT modImplementation); output is `jar` (no remapJar).
 //   * Compile against JDK 25.
-// Confirm the exact DSL against live Loom 1.15 docs on the first real build.
 
 plugins {
     id("maeve.kotlin-common")
@@ -16,18 +15,15 @@ plugins {
 dependencies {
     minecraft(libs.minecraft)
 
-    // No mappings(...) line: 26.1 jars are unobfuscated (Mojang mappings).
-
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
     implementation(libs.fabric.language.kotlin)
 
-    // Shared cosmetics protocol + version constants.
+    // Shared cosmetics protocol + version constants (bundled via JiJ in Phase 1).
     implementation(project(":shared"))
 }
 
 loom {
-    // Mixin refmap name; harmless to set even with the no-remap plugin.
     mixin {
         defaultRefmapName.set("maeve.refmap.json")
     }

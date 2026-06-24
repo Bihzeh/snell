@@ -14,8 +14,8 @@ version-sensitive code behind a thin platform/bridge layer so a later 1.21.x
 backport or 26.2 forward-port is additive.
 
 ## Consequences
-- Single, now-standard mapping target; simpler no-remap Loom build.
+- Single, now-standard mapping target; Mojang-mappings Loom build (loom.officialMojangMappings).
 - A new project avoids starting life on the just-deprecated Yarn/remap toolchain.
-- Costs: JDK 25, Loom 1.15, Gradle 9.4.0, IntelliJ 2025.3+.
+- Costs: JDK 25, Loom 1.15, Gradle 9.6.0, IntelliJ 2025.3+.
 - 26.2 adds a Vulkan backend and removes OpenGL -> all rendering MUST use Blaze3D.
 - Rejected: targeting legacy 1.21.x (mature but dying toolchain; migration debt).

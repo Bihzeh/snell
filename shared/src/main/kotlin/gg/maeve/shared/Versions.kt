@@ -8,13 +8,13 @@ package gg.maeve.shared
  * source of truth; this object mirrors the runtime-relevant subset.
  */
 object Versions {
-    const val MINECRAFT = "26.1.2"
-    const val FABRIC_LOADER = "0.18.4"
+    const val MINECRAFT = "26.2"
+    const val FABRIC_LOADER = "0.19.3"
 
     /** Bundled performance mods placed into the game profile by the launcher. */
     val BUNDLED_MODS: List<BundledMod> = listOf(
-        BundledMod("sodium", "0.8.7", "LGPL-3.0", "https://modrinth.com/mod/sodium"),
-        BundledMod("lithium", "0.22.1", "LGPL-3.0-only", "https://modrinth.com/mod/lithium"),
+        BundledMod("sodium", "0.9.0", "LGPL-3.0", "https://modrinth.com/mod/sodium"),
+        BundledMod("lithium", "0.25.0", "LGPL-3.0-only", "https://modrinth.com/mod/lithium"),
     )
 }
 

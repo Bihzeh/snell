@@ -15,7 +15,7 @@ Phase 0 — foundation scaffold. See [`docs/superpowers/specs/`](docs/superpower
 | Client | Fabric mod + Mixins, **Minecraft 26.1**, **Mojang mappings**, **JDK 25** |
 | Launcher | Kotlin **Compose Multiplatform** (Windows-first) |
 | Backend | Kotlin **Ktor** (Phase 3) |
-| Build | Gradle 9.4.0 multi-project, version catalog, convention plugins |
+| Build | Gradle 9.6.0 multi-project, version catalog, convention plugins |
 
 All third-party dependencies and their licenses are tracked in [`LICENSES/`](LICENSES/).
 
@@ -29,7 +29,7 @@ All third-party dependencies and their licenses are tracked in [`LICENSES/`](LIC
 
 ## Building
 
-Requires **JDK 25** and Gradle 9.4.0 (use the wrapper once generated: `gradle wrapper --gradle-version 9.4.0`).
+Requires **JDK 25** and Gradle 9.6.0 (use the wrapper once generated: `gradle wrapper --gradle-version 9.6.0`).
 
 ```bash
 ./gradlew build          # build all modules

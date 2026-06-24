@@ -11,8 +11,8 @@ the bundled jars at packaging time.
 
 | Mod | Version | License | Redistribution | Source |
 |---|---|---|---|---|
-| Sodium | 0.8.7 | LGPL-3.0 | OK as unmodified separate jar; ship license + offer source | https://modrinth.com/mod/sodium |
-| Lithium | 0.22.1 | LGPL-3.0-only | OK as unmodified separate jar; ship license + offer source | https://modrinth.com/mod/lithium |
+| Sodium | 0.9.0 | LGPL-3.0 | OK as unmodified separate jar; ship license + offer source | https://modrinth.com/mod/sodium |
+| Lithium | 0.25.0 | LGPL-3.0-only | OK as unmodified separate jar; ship license + offer source | https://modrinth.com/mod/lithium |
 
 > CONFIRM Sodium's exact current license text and vendor it here before any public
 > release. Add further perf mods (FerriteCore, ImmediatelyFast, EntityCulling, ...)
@@ -22,8 +22,8 @@ the bundled jars at packaging time.
 
 | Dependency | Version | License | Notes |
 |---|---|---|---|
-| Fabric Loader | 0.18.4 | Apache-2.0 | Loader |
-| Fabric API | (26.1 build) | Apache-2.0 | Required by the mod |
+| Fabric Loader | 0.19.3 | Apache-2.0 | Loader |
+| Fabric API | 0.152.2+26.2 | Apache-2.0 | Required by the mod |
 | Fabric Language Kotlin | (latest) | Apache-2.0 | Kotlin language adapter |
 | Kotlin stdlib | 2.4.0 | Apache-2.0 | |
 | kotlinx.serialization | 1.7.x | Apache-2.0 | |

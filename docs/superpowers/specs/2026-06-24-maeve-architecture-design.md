@@ -169,3 +169,31 @@ maeve/
 - **Code signing** (Windows Authenticode ~$100–400/yr, +Apple later) deferred for budget — unsigned builds hit SmartScreen; revisit before public release.
 - **LGPL obligations** — keep bundled mods unmodified + provide source links; re-verify on every version bump.
 - Confirm each additional perf mod (FerriteCore, ImmediatelyFast, EntityCulling, etc.) is **ported to 26.1** and license-compatible before bundling.
+
+---
+
+## Post-approval corrections (verified during Phase 0 scaffold, June 2026)
+
+The approved plan said "26.1" and carried a few versions from an earlier research
+pass. Verifying live against Mojang's manifest, the Fabric example-mod (26.2 branch),
+maven.fabricmc.net, and Modrinth corrected these. The architecture is unchanged;
+only versions/coordinates moved:
+
+| Item | Approved | Verified & used |
+|---|---|---|
+| Target MC | 26.1 (.2) | **26.2** (current stable release; 26.3 is snapshot) |
+| Fabric Loader | 0.18.4 | **0.19.3** |
+| Loom plugin | id `net.fabricmc.fabric-loom`, v1.15 | id `net.fabricmc.fabric-loom` (correct), **v1.17.12** |
+| Gradle | 9.4.0 | **9.6.0** (Loom 1.17.x requires >= 9.5) |
+| Fabric API | ~0.153 (guess) | **0.152.2+26.2** |
+| Mappings | "Mojang mappings" | **none** — 26.x jars are unobfuscated; no `mappings`, plain `implementation` |
+| Sodium / Lithium | 0.8.7 / 0.22.1 | **0.9.0 / 0.25.0** (mc26.2 builds) |
+| Java | 25 | 25 (confirmed: 26.2 requires JDK 25) |
+
+**Verification result:** `./gradlew build` is green across all four modules
+(`:shared` incl. a passing serialization test, `:mod` compiled against MC 26.2 via
+Loom, `:launcher` Compose, `:backend` Ktor). Toolchain used: Temurin JDK 25.0.3,
+Gradle 9.6.0.
+
+Note: 26.2 being the current stable means the OpenGL→Vulkan transition is live —
+reinforcing the Blaze3D-only rendering rule for cosmetics/HUD (ADR-0002, ADR-0007).

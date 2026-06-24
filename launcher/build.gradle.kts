@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation(compose.material3)
 
     // Microsoft auth + Mojang downloads.
     implementation(libs.ktor.client.core)
