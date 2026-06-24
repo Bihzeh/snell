@@ -21,6 +21,12 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "gg.maeve.launcher.MainKt"
+
+        // ProGuard 7.7 (used by Compose release builds) cannot read Java 25 bytecode
+        // (class version 69). Disable until ProGuard supports 25; re-enable for size.
+        buildTypes.release.proguard {
+            isEnabled.set(false)
+        }
         nativeDistributions {
             // Windows-first; macOS/Linux added later (see ADR-0004).
             targetFormats(
