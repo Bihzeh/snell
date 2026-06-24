@@ -52,6 +52,15 @@ class LauncherViewModel(private val scope: CoroutineScope) {
 
     private fun ui(block: () -> Unit) = SwingUtilities.invokeLater(block)
 
+    /** Dev-only: shown when MAEVE_DEV=1 (or -Dmaeve.dev=true). NEVER enabled in public
+     *  builds — playing without sign-in/ownership is against our server-legal stance. */
+    val devMode: Boolean = System.getenv("MAEVE_DEV") == "1" || System.getProperty("maeve.dev") == "true"
+
+    fun continueOffline() {
+        session = GameSession.offline()
+        screen = Screen.HOME
+    }
+
     fun signIn() {
         val clientId = AuthConfig.clientId()
         if (clientId == null) { signInError = "Set MAEVE_AZURE_CLIENT_ID to your approved Azure app id."; return }
