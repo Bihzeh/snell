@@ -77,11 +77,10 @@ class LauncherViewModel(private val scope: CoroutineScope) {
         }
     }
 
-    /** Dev-only: shown when MAEVE_DEV=1 (or -Dmaeve.dev=true). NEVER enabled in public
-     *  builds — playing without sign-in/ownership is against our server-legal stance. */
-    val devMode: Boolean = System.getenv("MAEVE_DEV") == "1" ||
-        System.getProperty("maeve.dev") == "true" ||
-        java.nio.file.Files.exists(MaevePaths.default().root.resolve("dev.flag"))
+    /** Build-time only (BuildInfo.isDev, set by -Pmaeve.dev=true). Public releases build
+     *  with dev=false, so the offline bypass is absent from the binary — no env var, file,
+     *  or password can enable it. Playing without sign-in/ownership stays out of public builds. */
+    val devMode: Boolean = BuildInfo.isDev
 
     fun continueOffline() {
         session = GameSession.offline()

@@ -25,17 +25,22 @@ dependencies {
 
 tasks.test { useJUnitPlatform() }
 
-// Bake the project version into a classpath resource the app reads at runtime.
+// Bake version + the build-time dev flag into a classpath resource read at runtime.
+// dev=true ONLY when built with -Pmaeve.dev=true (the dev-build workflow). Public
+// releases build without it -> dev=false -> the offline bypass is absent, not merely
+// hidden. No client-side password/file can enable it in a public binary.
 val generatedVersionDir = layout.buildDirectory.dir("generated/version")
-val generateVersionResource = tasks.register("generateVersionResource") {
-    val outFile = generatedVersionDir.get().file("maeve-version.txt").asFile
+val generateBuildInfo = tasks.register("generateBuildInfo") {
+    val outFile = generatedVersionDir.get().file("build.properties").asFile
     val v = project.version.toString()
+    val dev = providers.gradleProperty("maeve.dev").getOrElse("false")
     inputs.property("version", v)
+    inputs.property("dev", dev)
     outputs.file(outFile)
-    doLast { outFile.parentFile.mkdirs(); outFile.writeText(v) }
+    doLast { outFile.parentFile.mkdirs(); outFile.writeText("version=$v\ndev=$dev\n") }
 }
 sourceSets.named("main") { resources.srcDir(generatedVersionDir) }
-tasks.named("processResources") { dependsOn(generateVersionResource) }
+tasks.named("processResources") { dependsOn(generateBuildInfo) }
 
 compose.desktop {
     application {
