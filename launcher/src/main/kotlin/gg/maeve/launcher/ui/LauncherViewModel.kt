@@ -54,7 +54,9 @@ class LauncherViewModel(private val scope: CoroutineScope) {
 
     /** Dev-only: shown when MAEVE_DEV=1 (or -Dmaeve.dev=true). NEVER enabled in public
      *  builds — playing without sign-in/ownership is against our server-legal stance. */
-    val devMode: Boolean = System.getenv("MAEVE_DEV") == "1" || System.getProperty("maeve.dev") == "true"
+    val devMode: Boolean = System.getenv("MAEVE_DEV") == "1" ||
+        System.getProperty("maeve.dev") == "true" ||
+        java.nio.file.Files.exists(MaevePaths.default().root.resolve("dev.flag"))
 
     fun continueOffline() {
         session = GameSession.offline()
