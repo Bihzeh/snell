@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
@@ -24,7 +25,8 @@ import kotlin.io.path.fileSize
  */
 class Net(private val client: HttpClient = defaultClient()) : AutoCloseable {
 
-    suspend fun text(url: String): String = withRetry { client.get(url).bodyAsText() }
+    suspend fun text(url: String, headers: Map<String, String> = emptyMap()): String =
+        withRetry { client.get(url) { headers.forEach { (k, v) -> header(k, v) } }.bodyAsText() }
 
     /**
      * Download [url] to [dest]. Skips if a same-size file is already present (fast).

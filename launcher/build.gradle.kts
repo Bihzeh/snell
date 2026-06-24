@@ -25,6 +25,18 @@ dependencies {
 
 tasks.test { useJUnitPlatform() }
 
+// Bake the project version into a classpath resource the app reads at runtime.
+val generatedVersionDir = layout.buildDirectory.dir("generated/version")
+val generateVersionResource = tasks.register("generateVersionResource") {
+    val outFile = generatedVersionDir.get().file("maeve-version.txt").asFile
+    val v = project.version.toString()
+    inputs.property("version", v)
+    outputs.file(outFile)
+    doLast { outFile.parentFile.mkdirs(); outFile.writeText(v) }
+}
+sourceSets.named("main") { resources.srcDir(generatedVersionDir) }
+tasks.named("processResources") { dependsOn(generateVersionResource) }
+
 compose.desktop {
     application {
         mainClass = "gg.maeve.launcher.MainKt"

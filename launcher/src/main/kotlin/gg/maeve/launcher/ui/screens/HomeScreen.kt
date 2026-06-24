@@ -35,11 +35,13 @@ import gg.maeve.launcher.ui.components.VersionRender
 import gg.maeve.launcher.ui.components.promoSlides
 import gg.maeve.launcher.ui.theme.Maeve
 import gg.maeve.launcher.ui.theme.MaeveFonts
+import gg.maeve.launcher.update.UpdateState
 import gg.maeve.shared.Versions
 
 @Composable
 fun HomeScreen(vm: LauncherViewModel) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        UpdateBanner(vm)
         // Top: version + account
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Chip("Minecraft ${Versions.MINECRAFT} · Fabric")
@@ -105,6 +107,30 @@ fun HomeScreen(vm: LauncherViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun UpdateBanner(vm: LauncherViewModel) {
+    val u = vm.update
+    when (u) {
+        is UpdateState.Available -> Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Maeve.goldSubtle)
+                .border(1.dp, Maeve.gold.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Update available — ${u.info.tag}", color = Maeve.gold, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.weight(1f))
+            MaeveButton("Update now", { vm.applyUpdate() })
+        }
+        is UpdateState.Working -> Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, Maeve.borderSoft, RoundedCornerShape(12.dp)).padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Spinner(16); Text(u.status, color = Maeve.text2, style = MaterialTheme.typography.bodyMedium)
+        }
+        else -> {}
     }
 }
 

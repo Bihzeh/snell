@@ -13,6 +13,9 @@ import gg.maeve.launcher.auth.MsaDeviceCodeAuth
 import gg.maeve.launcher.game.GameSession
 import gg.maeve.launcher.game.Launcher
 import gg.maeve.launcher.game.MaevePaths
+import gg.maeve.launcher.update.BuildInfo
+import gg.maeve.launcher.update.UpdateService
+import gg.maeve.launcher.update.UpdateState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +54,28 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     val dataDir: Path get() = MaevePaths.default().root
 
     private fun ui(block: () -> Unit) = SwingUtilities.invokeLater(block)
+
+    // --- self-update ---
+    private val updater = UpdateService()
+    val currentVersion: String get() = BuildInfo.version
+    var update by mutableStateOf<UpdateState>(UpdateState.Idle)
+
+    fun checkForUpdates() {
+        update = UpdateState.Checking
+        scope.launch(Dispatchers.IO) {
+            runCatching { updater.check() }
+                .onSuccess { info -> ui { update = info?.let { UpdateState.Available(it) } ?: UpdateState.UpToDate } }
+                .onFailure { e -> ui { update = UpdateState.Error(e.message ?: "Update check failed") } }
+        }
+    }
+
+    fun applyUpdate() {
+        val info = (update as? UpdateState.Available)?.info ?: return
+        scope.launch(Dispatchers.IO) {
+            runCatching { updater.apply(info) { s -> ui { update = UpdateState.Working(s) } } }
+                .onFailure { e -> ui { update = UpdateState.Error(e.message ?: "Update failed") } }
+        }
+    }
 
     /** Dev-only: shown when MAEVE_DEV=1 (or -Dmaeve.dev=true). NEVER enabled in public
      *  builds — playing without sign-in/ownership is against our server-legal stance. */

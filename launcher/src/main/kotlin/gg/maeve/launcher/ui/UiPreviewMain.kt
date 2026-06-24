@@ -6,6 +6,9 @@ import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
 import gg.maeve.launcher.auth.DeviceCodePrompt
 import gg.maeve.launcher.game.GameSession
+import gg.maeve.launcher.update.SemVer
+import gg.maeve.launcher.update.UpdateInfo
+import gg.maeve.launcher.update.UpdateState
 import gg.maeve.launcher.ui.theme.MaeveTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,5 +41,11 @@ fun main() {
     render("03-home", W, H) { Shell(vm { session = GameSession.offline("MaeveQueen"); screen = Screen.HOME }) }
     render("04-mods", W, H) { Shell(vm { session = GameSession.offline("MaeveQueen"); screen = Screen.MODS }) }
     render("05-settings", W, H) { Shell(vm { session = GameSession.offline("MaeveQueen"); screen = Screen.SETTINGS }) }
+    render("06-home-update", W, H) {
+        Shell(vm {
+            session = GameSession.offline("MaeveQueen"); screen = Screen.HOME
+            update = UpdateState.Available(UpdateInfo(SemVer(0, 1, 4), "v0.1.4", "https://dl/x.exe", "Maeve-0.1.4.exe", null))
+        })
+    }
     println("ui preview done")
 }

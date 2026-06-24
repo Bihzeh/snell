@@ -1,5 +1,6 @@
 package gg.maeve.launcher
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
@@ -15,6 +16,9 @@ fun main() = application {
     val scope = rememberCoroutineScope()
     val vm = remember { LauncherViewModel(scope) }
     Window(onCloseRequest = ::exitApplication, state = windowState, title = "Maeve") {
-        MaeveTheme { Shell(vm) }
+        MaeveTheme {
+            LaunchedEffect(Unit) { vm.checkForUpdates() }
+            Shell(vm)
+        }
     }
 }

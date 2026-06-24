@@ -44,6 +44,14 @@ jobs:
         continue-on-error: true
         run: ./gradlew :launcher:packageReleaseMsi --no-daemon --console=plain
 
+      - name: Checksums for installers
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd launcher/build/compose/binaries/main-release
+          sha256sum exe/*.exe msi/*.msi 2>/dev/null | awk '{n=$2; sub(/.*\//,"",n); print $1"  "n}' > SHA256SUMS.txt || true
+          cat SHA256SUMS.txt || true
+
       - name: Upload app image (runnable folder with Maeve.exe)
         uses: actions/upload-artifact@v4
         with:
@@ -68,3 +76,4 @@ jobs:
           files: |
             launcher/build/compose/binaries/main-release/exe/*.exe
             launcher/build/compose/binaries/main-release/msi/*.msi
+            launcher/build/compose/binaries/main-release/SHA256SUMS.txt
