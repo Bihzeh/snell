@@ -1,0 +1,66 @@
+name: Release (launcher)
+
+# Builds the Windows launcher. Runs on demand (Actions tab -> Run workflow) and on
+# version tags (v*). A Windows runner is required: Compose Desktop packaging uses
+# jpackage, which is per-OS. Artifacts are downloadable from the run's summary page;
+# tagged runs also attach the installer to a GitHub Release.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ "v*" ]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # App image: a folder containing Maeve.exe. Always works (no WiX needed).
+      - name: Build app image
+        shell: bash
+        run: ./gradlew :launcher:createReleaseDistributable --no-daemon --console=plain
+
+      # Installers via jpackage (WiX is preinstalled on windows-latest). Non-fatal:
+      # the app image above is the guaranteed download if an installer step fails.
+      - name: Build .exe installer
+        shell: bash
+        continue-on-error: true
+        run: ./gradlew :launcher:packageReleaseExe --no-daemon --console=plain
+
+      - name: Build .msi installer
+        shell: bash
+        continue-on-error: true
+        run: ./gradlew :launcher:packageReleaseMsi --no-daemon --console=plain
+
+      - name: Upload app image (runnable folder with Maeve.exe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: maeve-launcher-windows-app
+          path: launcher/build/compose/binaries/main-release/app/**
+          if-no-files-found: error
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: maeve-launcher-windows-installers
+          path: |
+            launcher/build/compose/binaries/main-release/exe/*.exe
+            launcher/build/compose/binaries/main-release/msi/*.msi
+          if-no-files-found: warn
+
+      - name: Attach installers to Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            launcher/build/compose/binaries/main-release/exe/*.exe
+            launcher/build/compose/binaries/main-release/msi/*.msi
