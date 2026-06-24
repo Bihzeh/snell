@@ -40,3 +40,14 @@ are used under Mojang's license — review its terms before distribution.
 ## Maeve's own code
 
 Proprietary — see top-level `LICENSE` (decision: ADR-0009).
+
+## Bundled fonts (launcher UI)
+
+Shipped in `launcher/src/main/resources/fonts/`. All SIL Open Font License 1.1 —
+freely bundleable and redistributable.
+
+| Font | License | Source |
+|---|---|---|
+| Geist | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/geist |
+| Geist Mono | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/geistmono |
+| Marcellus | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/marcellus |

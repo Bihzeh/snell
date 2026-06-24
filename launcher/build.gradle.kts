@@ -54,3 +54,11 @@ tasks.register<JavaExec>("provisionTest") {
     classpath = sourceSets["main"].runtimeClasspath
     workingDir = rootProject.projectDir
 }
+
+// Headless render of the UI screens to PNGs (CPU Skia; no display needed).
+tasks.register<JavaExec>("uiPreview") {
+    group = "verification"
+    description = "Render launcher screens to build/ui-preview/*.png"
+    mainClass.set("gg.maeve.launcher.ui.UiPreviewMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}

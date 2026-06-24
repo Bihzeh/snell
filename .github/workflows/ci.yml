@@ -40,3 +40,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify LICENSES manifest exists
         run: test -f LICENSES/README.md && echo "LICENSES manifest present"
+
+  ui-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OpenGL runtime (skiko needs libGL)
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libglx-mesa0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Render launcher UI previews
+        run: ./gradlew :launcher:uiPreview
+      - name: Upload UI previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: maeve-ui-previews
+          path: launcher/build/ui-preview/*.png
+          if-no-files-found: error

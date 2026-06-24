@@ -18,6 +18,7 @@ class Launcher(private val paths: MaevePaths = MaevePaths.default()) {
         localMaeveMod: Path? = null,
         java: Path? = null,
         maxMemoryMb: Int = 2048,
+        enabledMods: Set<String>? = null,
         onStatus: (String) -> Unit = {},
         onLog: (String) -> Unit = {},
     ): Process {
@@ -25,7 +26,7 @@ class Launcher(private val paths: MaevePaths = MaevePaths.default()) {
         val provisioned: GameProvisioner.Provisioned
         val javaPath: Path
         try {
-            provisioned = GameProvisioner(net, paths).provision(mcVersion, loader, instanceId, localMaeveMod, onStatus)
+            provisioned = GameProvisioner(net, paths).provision(mcVersion, loader, instanceId, localMaeveMod, enabledMods, onStatus)
             javaPath = java ?: JreProvisioner(net, paths).ensure()
         } finally {
             net.close()

@@ -30,11 +30,13 @@ class ModProvisioner(private val net: Net, private val paths: MaevePaths) {
         instanceId: String,
         mcVersion: String,
         localMaeveMod: Path?,
+        enabledMods: Set<String>? = null,
         onStatus: (String) -> Unit,
     ) {
         val modsDir = paths.mods(instanceId)
         Files.createDirectories(modsDir)
-        for (slug in BUNDLED) {
+        val slugs = if (enabledMods == null) BUNDLED else BUNDLED.filter { it in enabledMods }
+        for (slug in slugs) {
             onStatus("Mod: $slug")
             val file = latestFabricFile(slug, mcVersion)
             net.download(file.url, modsDir.resolve(file.filename), sha1 = file.hashes.sha1, size = file.size)

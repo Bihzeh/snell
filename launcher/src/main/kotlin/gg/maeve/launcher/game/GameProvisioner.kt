@@ -29,6 +29,7 @@ class GameProvisioner(private val net: Net, private val paths: MaevePaths) {
         loader: String,
         instanceId: String,
         localMaeveMod: Path?,
+        enabledMods: Set<String>? = null,
         onStatus: (String) -> Unit,
     ): Provisioned {
         paths.ensureBase()
@@ -64,7 +65,7 @@ class GameProvisioner(private val net: Net, private val paths: MaevePaths) {
         }
 
         onStatus("Downloading mods…")
-        ModProvisioner(net, paths).provision(instanceId, mcVersion, localMaeveMod, onStatus)
+        ModProvisioner(net, paths).provision(instanceId, mcVersion, localMaeveMod, enabledMods, onStatus)
 
         val instanceDir = paths.instance(instanceId).also { Files.createDirectories(it) }
         val nativesDir = paths.natives(instanceId).also { Files.createDirectories(it) }
