@@ -30,16 +30,18 @@ class MaeveMod : ClientModInitializer {
         modules.register(KeystrokesModule())
 
         val hud = HudRenderController(modules)
-        bridge.installHudRenderer { canvas, ctx -> hud.draw(canvas, ctx) }
+        bridge.installHud { canvas, ctx -> hud.draw(canvas, ctx) }
 
+        @Suppress("UNUSED_VARIABLE")
         val cosmetics = LocalStubCosmeticsClient() // Phase 3: HttpCosmeticsClient
-        val menu = ModMenuController(modules)
-        bridge.registerMenuKeybind { menu.open() }
 
-        LOG.info("Maeve initialized: ${modules.all().size} modules, cosmetics=${cosmetics::class.simpleName}")
+        val menu = ModMenuController(modules)
+        bridge.installMenuKeybind { bridge.openModMenu(menu) }
+
+        LOG.info("Maeve initialized: {} modules", modules.all().size)
     }
 
-    companion object {
+    private companion object {
         private val LOG = org.slf4j.LoggerFactory.getLogger("Maeve")
     }
 }

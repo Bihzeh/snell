@@ -10,6 +10,7 @@
 plugins {
     id("maeve.kotlin-common")
     alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -21,7 +22,12 @@ dependencies {
 
     // Shared cosmetics protocol + version constants (bundled via JiJ in Phase 1).
     implementation(project(":shared"))
+
+    testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
+
+tasks.test { useJUnitPlatform() }
 
 loom {
     mixin {
