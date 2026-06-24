@@ -61,7 +61,7 @@ fun SignInScreen(vm: LauncherViewModel) {
                     Spinner(28); Text("Confirming with Microsoft…", color = Maeve.text2)
                 }
                 else -> {
-                    Text("Sign in to play", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Sign in to play", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     MaeveButton("Sign in with Microsoft", { vm.signIn() }, fillWidth = true)
                     Text("Official Microsoft login · we never see your password", color = Maeve.text3, textAlign = TextAlign.Center, style = MaterialTheme.typography.labelMedium)
                     if (vm.devMode) {

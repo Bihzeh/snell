@@ -2,6 +2,7 @@ package gg.maeve.launcher.ui.theme
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -88,11 +89,12 @@ private val MaeveShapes = Shapes(
 
 @Composable
 fun MaeveTheme(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalMaeveColors provides MaeveColors()) {
-        MaterialTheme(
-            colorScheme = MaeveColorScheme,
-            typography = MaeveTypography,
-            shapes = MaeveShapes,
+    MaterialTheme(colorScheme = MaeveColorScheme, typography = MaeveTypography, shapes = MaeveShapes) {
+        // Default content color must be light — Compose's default is Color.Black, invisible
+        // on our near-black surfaces (any Text/icon without an explicit color).
+        CompositionLocalProvider(
+            LocalMaeveColors provides MaeveColors(),
+            LocalContentColor provides MaeveColorScheme.onBackground,
             content = content,
         )
     }

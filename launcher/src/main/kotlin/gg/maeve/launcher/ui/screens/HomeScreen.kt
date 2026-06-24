@@ -7,21 +7,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gg.maeve.launcher.ui.LauncherViewModel
 import gg.maeve.launcher.ui.components.ButtonVariant
+import gg.maeve.launcher.ui.components.Carousel
 import gg.maeve.launcher.ui.components.MaeveButton
 import gg.maeve.launcher.ui.components.MaeveCard
 import gg.maeve.launcher.ui.components.MaeveProgress
@@ -29,6 +31,8 @@ import gg.maeve.launcher.ui.components.PillKind
 import gg.maeve.launcher.ui.components.PlayButton
 import gg.maeve.launcher.ui.components.Spinner
 import gg.maeve.launcher.ui.components.StatusPill
+import gg.maeve.launcher.ui.components.VersionRender
+import gg.maeve.launcher.ui.components.promoSlides
 import gg.maeve.launcher.ui.theme.Maeve
 import gg.maeve.launcher.ui.theme.MaeveFonts
 import gg.maeve.shared.Versions
@@ -43,19 +47,31 @@ fun HomeScreen(vm: LauncherViewModel) {
             Chip(vm.session?.username ?: "—")
         }
 
-        // Middle: featured + what's new
+        // Carousel — full-width, inline with the cards (future ads / promoted servers / news)
+        Carousel(promoSlides())
+
+        // Featured (with version render) + What's new
         Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            MaeveCard(Modifier.weight(1.7f).fillMaxSize()) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("FEATURED", color = Maeve.gold, letterSpacing = 2.sp, style = MaterialTheme.typography.labelSmall)
-                    Text("Minecraft ${Versions.MINECRAFT}, tuned.", fontFamily = MaeveFonts.Marcellus, fontSize = 34.sp, color = MaterialTheme.colorScheme.onBackground)
-                    Text("Sodium and Lithium bundled, an in-game HUD, and a launcher that stays out of your way.", color = Maeve.text2, style = MaterialTheme.typography.bodyMedium)
-                    MaeveButton("Read the notes", { }, variant = ButtonVariant.Secondary)
+            // Featured card: render panel on the left, marketing copy on the right.
+            Box(
+                Modifier.weight(1.7f).fillMaxHeight()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, Maeve.borderSoft, RoundedCornerShape(14.dp)),
+            ) {
+                Row(Modifier.fillMaxSize()) {
+                    VersionRender(Versions.MINECRAFT, Modifier.weight(1f).fillMaxHeight())
+                    Column(Modifier.weight(1f).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("FEATURED", color = Maeve.gold, letterSpacing = 2.sp, style = MaterialTheme.typography.labelSmall)
+                        Text("Minecraft ${Versions.MINECRAFT}, tuned.", fontFamily = MaeveFonts.Marcellus, fontSize = 28.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text("Sodium and Lithium bundled, an in-game HUD, and a launcher that stays out of your way.", color = Maeve.text2, style = MaterialTheme.typography.bodyMedium)
+                        MaeveButton("Read the notes", { }, variant = ButtonVariant.Secondary)
+                    }
                 }
             }
-            MaeveCard(Modifier.weight(1f).fillMaxSize()) {
+            MaeveCard(Modifier.weight(1f).fillMaxHeight()) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("What's new", style = MaterialTheme.typography.titleMedium)
+                    Text("What's new", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
                     Text("Sodium 0.9 rendering", color = Maeve.text2, style = MaterialTheme.typography.bodySmall)
                     Text("Keystroke + FPS HUD", color = Maeve.text2, style = MaterialTheme.typography.bodySmall)
                     Text("Lithium tick budget", color = Maeve.text2, style = MaterialTheme.typography.bodySmall)
@@ -71,7 +87,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     Spinner(18)
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(vm.playStatus.ifEmpty { "Working…" }, style = MaterialTheme.typography.bodyMedium)
+                        Text(vm.playStatus.ifEmpty { "Working…" }, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
                         MaeveProgress(vm.playFraction)
                     }
                 }
