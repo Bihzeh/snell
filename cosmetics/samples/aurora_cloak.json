@@ -1,0 +1,8 @@
+{
+  "id": "aurora_cloak",
+  "type": "CLOAK",
+  "name": "Aurora Cloak",
+  "attach": "BODY",
+  "texture": "aurora.png",
+  "animation": { "kind": "sway", "stiffness": 0.6 }
+}

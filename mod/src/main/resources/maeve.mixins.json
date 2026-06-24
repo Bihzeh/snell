@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "gg.maeve.mod.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [],
+  "injectors": { "defaultRequire": 1 },
+  "comment": "Client mixins start empty. The MVP HUD uses the Fabric HUD render callback (no mixin). The cosmetics player-renderer mixin is added in Phase 3; see gg.maeve.mod.cosmetics.CosmeticsRenderer for the integration point. Set compatibilityLevel to the value Loom 1.15 expects for JDK 25 on the first real build."
+}

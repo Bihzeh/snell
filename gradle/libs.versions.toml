@@ -1,0 +1,60 @@
+# Single source of truth for every pinned version.
+# Verified live June 2026. Confirm any item marked CONFIRM against live docs
+# on the first real build (toolchain was not installed when this was scaffolded).
+
+[versions]
+# --- Toolchain ---
+java = "25"                       # required by Minecraft 26.1
+gradle = "9.4.0"
+kotlin = "2.4.0"
+
+# --- Minecraft / Fabric (26.1 line; jars ship unobfuscated, Mojang mappings) ---
+minecraft = "26.1.2"
+loom = "1.15"                     # use the no-remap net.fabricmc.fabric-loom plugin
+fabric-loader = "0.18.4"
+fabric-api = "0.153.0+26.1"       # CONFIRM exact build for 26.1 on modrinth/fabric maven
+fabric-language-kotlin = "1.13.0+kotlin.2.4.0"  # CONFIRM latest for 26.1
+
+# --- Bundled performance mods (NOT compile deps; placed in the profile by the
+#     launcher and tracked in LICENSES/). Pinned here for the launcher manifest. ---
+sodium = "0.8.7"                  # LGPL-3.0
+lithium = "0.22.1"               # LGPL-3.0-only
+
+# --- Launcher / backend (Kotlin/JVM) ---
+compose-multiplatform = "1.11.1"
+ktor = "3.5.0"
+kotlinx-serialization = "1.7.3"  # CONFIRM compatible with Kotlin 2.4.0
+kotlinx-coroutines = "1.9.0"     # CONFIRM
+logback = "1.5.12"
+
+[libraries]
+# Shared
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
+# Mod (Fabric)
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+fabric-language-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-language-kotlin" }
+
+# Launcher (Ktor client for Microsoft auth + downloads)
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# Backend (Ktor server)
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }

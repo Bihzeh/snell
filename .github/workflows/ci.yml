@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # :shared has no Minecraft dependency and is the fast, always-runnable gate.
+      - name: Build & test shared
+        run: ./gradlew :shared:build
+
+      # Backend is plain Ktor/JVM.
+      - name: Build backend
+        run: ./gradlew :backend:build
+
+      # Mod + launcher require the full toolchain (Loom decompile / Compose);
+      # kept as a separate, non-blocking job target while the 26.1 build is wired.
+      - name: Build mod & launcher
+        run: ./gradlew :mod:build :launcher:build
+        continue-on-error: true
+
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify LICENSES manifest exists
+        run: test -f LICENSES/README.md && echo "LICENSES manifest present"

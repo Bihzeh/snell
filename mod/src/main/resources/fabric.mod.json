@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "maeve",
+  "version": "${version}",
+  "name": "Maeve",
+  "description": "Server-legal performance + quality-of-life client: HUD, mod menu, cosmetics.",
+  "authors": ["Maeve"],
+  "contact": { "homepage": "https://maeve.gg" },
+  "license": "LicenseRef-Maeve-Proprietary",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      { "adapter": "kotlin", "value": "gg.maeve.mod.MaeveMod" }
+    ]
+  },
+  "mixins": [
+    { "config": "maeve.mixins.json", "environment": "client" }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader}",
+    "minecraft": "~${minecraft}",
+    "java": ">=25",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*"
+  }
+}

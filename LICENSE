@@ -1,0 +1,11 @@
+Copyright (c) 2026 Maeve. All rights reserved.
+
+This source code is proprietary. It is provided for the Maeve project only.
+Redistribution, modification, or use outside this project is not permitted
+without prior written permission.
+
+NOTE (decision pending — see docs/adr/ADR-0009): the project-code license is a
+business decision. This proprietary default mirrors comparable clients (Lunar,
+Feather). It does NOT affect the separately-bundled third-party mods, which
+retain their own licenses (see LICENSES/). Change this file if a different
+license is chosen.
