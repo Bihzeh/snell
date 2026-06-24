@@ -51,8 +51,10 @@ private fun defaultMaeveMod(): Path? {
 }
 
 private fun openBrowser(uri: String) = runCatching {
+    val u = URI(uri)
+    require(u.scheme?.lowercase() in setOf("https", "http")) { "unexpected URI scheme: ${u.scheme}" }
     if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-        Desktop.getDesktop().browse(URI(uri))
+        Desktop.getDesktop().browse(u)
     }
 }
 

@@ -54,12 +54,13 @@ class GameProvisioner(private val net: Net, private val paths: MaevePaths) {
         onStatus("Installing Fabric $loader…")
         val fp = fabric.profile(mcVersion, loader)
         val fabricCp = fp.libraries.map { paths.safeLibrary(fabric.resolve(it).first) }
-        // NOTE: the Fabric loader profile carries no artifact hashes, so these jars are
-        // fetched over HTTPS without a content check (path traversal is still guarded).
-        // TODO: verify against each Maven artifact's .sha1 sidecar.
+        // Fabric profile JSON carries no hashes; verify each jar against its Maven .sha1
+        // sidecar when available (closes the classpath supply-chain gap).
         parallel(fp.libraries) { lib ->
             val (path, url) = fabric.resolve(lib)
-            net.download(url, paths.safeLibrary(path))
+            val sha1 = runCatching { net.text("$url.sha1").trim().substringBefore(' ').lowercase() }
+                .getOrNull()?.takeIf { it.matches(Regex("[0-9a-f]{40}")) }
+            net.download(url, paths.safeLibrary(path), sha1 = sha1)
         }
 
         onStatus("Downloading mods…")

@@ -53,7 +53,7 @@ class MsaDeviceCodeAuth(
                 "slow_down" -> interval += 5
                 "expired_token" -> throw AuthException("The sign-in code expired. Try again.")
                 "authorization_declined" -> throw AuthException("Sign-in was declined.")
-                else -> throw AuthException("Sign-in failed: ${t.error ?: "unknown"} ${t.errorDescription ?: ""}".trim())
+                else -> throw AuthException("Sign-in failed: ${t.error ?: "unknown"} ${(t.errorDescription ?: "").take(160)}".trim())
             }
         }
         throw AuthException("The sign-in code expired. Try again.")
