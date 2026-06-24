@@ -14,9 +14,16 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":shared"))
+
+    testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
+
+tasks.test { useJUnitPlatform() }
 
 compose.desktop {
     application {
@@ -37,4 +44,13 @@ compose.desktop {
             packageVersion = (project.version as String).substringBefore("-").ifEmpty { "1.0.0" }
         }
     }
+}
+
+// Headless provision + launch verification (downloads MC/Fabric/mods; needs network).
+tasks.register<JavaExec>("provisionTest") {
+    group = "verification"
+    description = "Provision MC 26.2 + Fabric + mods and launch headless to verify the chain."
+    mainClass.set("gg.maeve.launcher.game.ProvisionMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = rootProject.projectDir
 }
