@@ -121,7 +121,7 @@ class FabricMinecraftBridge : MinecraftBridge {
 
     private companion object {
         val FONT_PACK = Identifier.fromNamespaceAndPath("maeve", "font")
-        const val FONT_PACK_ID = "maeve:font"
+        val FONT_PACK_ID: String = FONT_PACK.toString() // derived -> can never diverge from FONT_PACK
     }
 }
 

@@ -19,7 +19,7 @@ class FontPackResourceTest {
         val txt = assertNotNull(text("resourcepacks/font/pack.mcmeta"))
         val pack = Json.parseToJsonElement(txt).jsonObject["pack"]!!.jsonObject
         assertEquals(listOf(88, 0), pack["min_format"]!!.jsonArray.map { it.jsonPrimitive.int })
-        assertEquals(listOf(88, 0), pack["max_format"]!!.jsonArray.map { it.jsonPrimitive.int })
+        assertEquals(listOf(88, 99), pack["max_format"]!!.jsonArray.map { it.jsonPrimitive.int })
     }
 
     @Test fun `default font puts the geist ttf ahead of the vanilla references`() {
