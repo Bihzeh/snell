@@ -79,6 +79,9 @@ class FabricMinecraftBridge : MinecraftBridge {
             keyBack = opts.keyDown.isDown,
             keyLeft = opts.keyLeft.isDown,
             keyRight = opts.keyRight.isDown,
+            yaw = player?.yRot ?: 0f,
+            dayTime = mc.level?.overworldClockTime ?: 0L, // 26.2 renamed getDayTime -> getOverworldClockTime
+            speed = player?.deltaMovement?.let { kotlin.math.hypot(it.x, it.z) * 20.0 } ?: 0.0,
         )
     }
 

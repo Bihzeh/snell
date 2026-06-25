@@ -3,9 +3,13 @@ package gg.maeve.mod
 import gg.maeve.mod.config.Config
 import gg.maeve.mod.module.FontModule
 import gg.maeve.mod.module.ModuleManager
+import gg.maeve.mod.module.hud.ClockModule
 import gg.maeve.mod.module.hud.CoordsModule
+import gg.maeve.mod.module.hud.DayModule
+import gg.maeve.mod.module.hud.DirectionModule
 import gg.maeve.mod.module.hud.FpsModule
 import gg.maeve.mod.module.hud.KeystrokesModule
+import gg.maeve.mod.module.hud.SpeedModule
 import gg.maeve.mod.platform.FabricMinecraftBridge
 import gg.maeve.mod.platform.MinecraftBridge
 import gg.maeve.mod.render.HudRenderController
@@ -29,6 +33,10 @@ class MaeveMod : ClientModInitializer {
         modules.register(FpsModule())
         modules.register(CoordsModule())
         modules.register(KeystrokesModule())
+        modules.register(DirectionModule())
+        modules.register(DayModule())
+        modules.register(ClockModule())
+        modules.register(SpeedModule())
 
         val hud = HudRenderController(modules)
         bridge.installHud { canvas, ctx -> hud.draw(canvas, ctx) }

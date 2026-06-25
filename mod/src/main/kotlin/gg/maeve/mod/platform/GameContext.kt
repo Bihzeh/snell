@@ -15,6 +15,9 @@ data class GameContext(
     val keyBack: Boolean,
     val keyLeft: Boolean,
     val keyRight: Boolean,
+    val yaw: Float = 0f,
+    val dayTime: Long = 0L,
+    val speed: Double = 0.0,
 )
 
 /**
