@@ -53,7 +53,7 @@ class CustomizeLayoutTest {
     @Test fun `hud popup contains every style control`() {
         val popup = CustomizeLayout.popupRect(800, 600, true)
         val controls = CustomizeLayout.controls(popup, 0, 0)
-        for (id in listOf("preview", "sv", "hue", "alpha", "hex", "visible", "scale-", "scale+", "reset")) {
+        for (id in listOf("sv", "hue", "alpha", "hex", "visible", "scale-", "scale+", "reset")) {
             val c = controls.firstOrNull { it.id == id }
             assertNotNull(c, "control $id present")
             assertTrue(c.rect.left >= popup.left && c.rect.right <= popup.right, "$id within popup width")

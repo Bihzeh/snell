@@ -96,7 +96,7 @@ class KeystrokesModule : HudModule {
         if (label.isEmpty()) return
         val lc = letter(fill)
         val tw = canvas.textWidth(label)
-        val lx = x + (w - tw) / 2
+        val lx = x + (w - tw + 1) / 2 // +1 offsets the font's trailing advance so the glyph centres
         val ly = y + (h - canvas.lineHeight) / 2 + 1
         if (opts.bool("letterOutlineOn")) {
             val oc = opts.color("letterOutline")

@@ -130,7 +130,7 @@ class EditorStateTest {
     // --- CUSTOMIZE tier -----------------------------------------------------
     @Test fun `customize close returns to the grid`() {
         val (mgr, boxes, s) = setup(); openCustomize(s, boxes, mgr, "fps")
-        val close = CustomizeLayout.closeButton(CustomizeLayout.popupRect(800, 600, true))
+        val close = CustomizeLayout.closeButton(CustomizeLayout.popupRect(800, 600, true, 1, 0))
         s.onPress(close.cx(), close.cy(), 800, 600, boxes, mgr)
         assertEquals(EditorView.GRID, s.view); assertNull(s.customizing)
     }

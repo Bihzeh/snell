@@ -130,15 +130,17 @@ class EditorRenderer {
         val hud = modules.hudById(sel)
         val popup = CustomizeLayout.popupRect(screenW, screenH, hud != null, hud?.colorTargets()?.size ?: 0, hud?.toggles?.size ?: 0)
         panel(canvas, popup)
-        // left-aligned title bar (so a long name never collides with the close button)
-        canvas.gradientV(popup.left + 1, popup.top + 1, popup.width - 2, 18, lighten(MaevePalette.elevated, 0.08f), MaevePalette.elevated)
-        canvas.fill(popup.left + 1, popup.top + 19, popup.width - 2, 1, MaevePalette.outline)
-        canvas.drawText(popup.left + 10, popup.top + 6, ellipsize(canvas, module.displayName, popup.width - 40), MaevePalette.gold)
+        round(canvas, popup, scrim)
+        val hh = CustomizeLayout.TITLE_H
+        canvas.gradientV(popup.left + 1, popup.top + 1, popup.width - 2, hh - 2, lighten(MaevePalette.elevated, 0.12f), MaevePalette.elevated)
+        canvas.fill(popup.left + 1, popup.top + hh - 1, popup.width - 2, 1, MaevePalette.outline)
+        canvas.fill(popup.left + CustomizeLayout.PAD, popup.top + (hh - 7) / 2, 4, 7, MaevePalette.gold) // accent tab
+        canvas.drawText(popup.left + CustomizeLayout.PAD + 9, popup.top + (hh - canvas.lineHeight) / 2, ellipsize(canvas, module.displayName, popup.width - 50), MaevePalette.text)
         val cb = CustomizeLayout.closeButton(popup)
-        button(canvas, cb, "x", primary = false, hover = cb.contains(mouseX, mouseY))
+        button(canvas, cb, "x", primary = false, hover = cb.contains(mouseX, mouseY)); round(canvas, cb, MaevePalette.elevated)
 
         if (hud != null) {
-            drawStyleControls(canvas, hud, popup, state)
+            drawStyleControls(canvas, hud, popup, state, mouseX, mouseY)
         } else {
             val en = CustomizeLayout.enableToggle(popup)
             canvas.drawText(en.left, en.top + 3, if (module.enabled) "Enabled" else "Disabled", if (module.enabled) white else MaevePalette.text2)
@@ -146,7 +148,7 @@ class EditorRenderer {
         }
     }
 
-    private fun drawStyleControls(canvas: EditorCanvas, module: HudModule, popup: Rect, state: EditorState) {
+    private fun drawStyleControls(canvas: EditorCanvas, module: HudModule, popup: Rect, state: EditorState, mouseX: Int, mouseY: Int) {
         val st = module.style
         val targets = module.colorTargets()
         val tc = targets.size
@@ -165,49 +167,53 @@ class EditorRenderer {
         c["hex"]?.rect?.let { r ->
             canvas.fill(r.left, r.top, r.width, r.height, darken(MaevePalette.elevated, 0.12f))
             canvas.border(r.left, r.top, r.width, r.height, if (state.isHexFocused) MaevePalette.gold else MaevePalette.outline)
+            round(canvas, r, MaevePalette.surface)
             val text = if (state.isHexFocused) "#" + state.hexText + "_" else HexColor.encode(active)
-            canvas.drawText(r.left + 4, r.top + 2, text, MaevePalette.text)
+            canvas.drawText(r.left + 5, r.top + (r.height - canvas.lineHeight) / 2 + 1, text, MaevePalette.text)
         }
 
-        // Colour-target chips: pick which colour the one picker edits.
+        val (colCap, optCap, styCap) = CustomizeLayout.captions(popup, tc, oc)
+        sectionLabel(canvas, colCap, "COLOUR")
         val chips = CustomizeLayout.targetChips(popup, tc)
         targets.forEachIndexed { i, t ->
-            val r = chips[i]; val on = t.key == state.selectedTargetKey
-            canvas.fill(r.left, r.top, r.width, r.height, if (on) lighten(MaevePalette.elevated, 0.12f) else MaevePalette.elevated)
+            val r = chips[i]; val on = t.key == state.selectedTargetKey; val hov = r.contains(mouseX, mouseY)
+            val bg = when { on -> blend(MaevePalette.elevated, MaevePalette.gold, 0.16f); hov -> lighten(MaevePalette.elevated, 0.12f); else -> MaevePalette.elevated }
+            canvas.fill(r.left, r.top, r.width, r.height, bg)
             canvas.border(r.left, r.top, r.width, r.height, if (on) MaevePalette.gold else MaevePalette.outline)
-            canvas.drawText(r.left + 5, r.top + 3, t.label, if (on) white else MaevePalette.text2)
-            val sw = 12; val sx = r.right - sw - 4; val sy = r.top + 2; val sh = r.height - 4
-            checker(canvas, sx, sy, sw, sh)
-            canvas.fill(sx, sy, sw, sh, module.targetColor(t.key)) // full ARGB so translucency shows
-            canvas.border(sx, sy, sw, sh, MaevePalette.outline)
+            round(canvas, r, MaevePalette.surface)
+            canvas.drawText(r.left + 7, r.top + (r.height - canvas.lineHeight) / 2 + 1, t.label, if (on) white else MaevePalette.text2)
+            val sw = 14; val sx = r.right - sw - 6; val sy = r.top + (r.height - sw) / 2
+            checker(canvas, sx, sy, sw, sw)
+            canvas.fill(sx, sy, sw, sw, module.targetColor(t.key)) // full ARGB so translucency shows
+            canvas.border(sx, sy, sw, sw, MaevePalette.outline)
         }
 
-        // Module option toggles.
         if (oc > 0) {
+            sectionLabel(canvas, optCap, "OPTIONS")
             val rows = CustomizeLayout.optionRows(popup, tc, oc)
             module.toggles.forEachIndexed { i, t ->
-                val r = rows[i]; val on = module.option(t.key)
-                canvas.drawText(r.left + 5, r.top + 3, t.label, if (on) white else MaevePalette.text2)
-                switch(canvas, Rect(r.right - 24, r.top + 1, 22, r.height - 2), on)
+                val r = rows[i]; rowHover(canvas, r, mouseX, mouseY); val on = module.option(t.key)
+                canvas.drawText(r.left + 6, r.top + (r.height - canvas.lineHeight) / 2 + 1, t.label, if (on) white else MaevePalette.text2)
+                switch(canvas, Rect(r.right - 26, r.top + 2, 24, r.height - 4), on)
             }
         }
 
-        // Generic style toggles (visible/bold/italic).
+        sectionLabel(canvas, styCap, "STYLE")
         for (id in TOGGLE_ROW) {
             val r = c[id]?.rect ?: continue
-            val on = toggleState(id, module, st)
-            canvas.drawText(r.left + 5, r.top + 3, label(id), if (on) white else MaevePalette.text2)
-            switch(canvas, Rect(r.right - 24, r.top + 1, 22, r.height - 2), on)
+            rowHover(canvas, r, mouseX, mouseY); val on = toggleState(id, module, st)
+            canvas.drawText(r.left + 6, r.top + (r.height - canvas.lineHeight) / 2 + 1, label(id), if (on) white else MaevePalette.text2)
+            switch(canvas, Rect(r.right - 26, r.top + 2, 24, r.height - 4), on)
         }
         val sm = c["scale-"]?.rect; val sp = c["scale+"]?.rect
         if (sm != null && sp != null) {
-            button(canvas, sm, "-"); button(canvas, sp, "+")
+            button(canvas, sm, "-", hover = sm.contains(mouseX, mouseY)); round(canvas, sm, MaevePalette.surface)
+            button(canvas, sp, "+", hover = sp.contains(mouseX, mouseY)); round(canvas, sp, MaevePalette.surface)
             val v = "x%.2f".format(st.scale)
-            canvas.drawText((sm.right + sp.left) / 2 - canvas.textWidth(v) / 2, sm.top + 3, v, MaevePalette.text2)
+            canvas.drawText((sm.right + sp.left) / 2 - canvas.textWidth(v) / 2, sm.top + (sm.height - canvas.lineHeight) / 2 + 1, v, MaevePalette.text2)
         }
-        c["reset"]?.rect?.let { button(canvas, it, "Reset") }
+        c["reset"]?.rect?.let { button(canvas, it, "Reset", hover = it.contains(mouseX, mouseY)); round(canvas, it, MaevePalette.surface) }
 
-        // Swatches apply to the active target.
         CustomizeLayout.SWATCHES.forEachIndexed { i, col ->
             c["swatch:$i"]?.rect?.let { r ->
                 canvas.fill(r.left, r.top, r.width, r.height, black or MaeveColor.rgbOf(col))
@@ -216,6 +222,23 @@ class EditorRenderer {
                 else canvas.border(r.left, r.top, r.width, r.height, MaevePalette.outline)
             }
         }
+    }
+
+    private fun sectionLabel(canvas: EditorCanvas, cap: Rect, text: String) {
+        canvas.drawText(cap.left + 1, cap.top, text, MaevePalette.text2)
+        canvas.fill(cap.left, cap.bottom - 2, cap.width, 1, MaevePalette.outline)
+    }
+
+    private fun rowHover(canvas: EditorCanvas, r: Rect, mouseX: Int, mouseY: Int) {
+        if (r.contains(mouseX, mouseY)) canvas.fill(r.left, r.top, r.width, r.height, lighten(MaevePalette.surface, 0.07f))
+    }
+
+    /** Knock ~2px corners to [bg] so a panel/chip/button reads as rounded. */
+    private fun round(canvas: EditorCanvas, r: Rect, bg: Int) {
+        canvas.fill(r.left, r.top, 2, 1, bg); canvas.fill(r.left, r.top, 1, 2, bg)
+        canvas.fill(r.right - 2, r.top, 2, 1, bg); canvas.fill(r.right - 1, r.top, 1, 2, bg)
+        canvas.fill(r.left, r.bottom - 1, 2, 1, bg); canvas.fill(r.left, r.bottom - 2, 1, 2, bg)
+        canvas.fill(r.right - 2, r.bottom - 1, 2, 1, bg); canvas.fill(r.right - 1, r.bottom - 2, 1, 2, bg)
     }
 
     private fun toggleState(id: String, module: HudModule, st: HudStyle) = when (id) {
