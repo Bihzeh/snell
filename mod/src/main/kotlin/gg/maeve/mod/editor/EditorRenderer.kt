@@ -1,17 +1,23 @@
 package gg.maeve.mod.editor
 
 import gg.maeve.mod.config.HexColor
+import gg.maeve.mod.module.HudModule
 import gg.maeve.mod.module.ModuleManager
 import gg.maeve.mod.platform.EditorCanvas
 import gg.maeve.mod.platform.GameContext
 import gg.maeve.mod.render.HudModuleRender
 import gg.maeve.shared.MaevePalette
 
-/** Draws the HUD editor: live preview of all elements, hover/selection outlines, and the
- *  selection panel with a full HSV colour picker. Pure orchestration over [EditorCanvas]. */
+/**
+ * Draws the HUD editor across its three tiers. POSITION: a live preview with drag outlines, the
+ * Maeve wordmark and a "Mods" button. GRID: a card per module. CUSTOMIZE: a centered popup with
+ * one module's controls (full HSV style panel for HUD modules; an enable toggle otherwise).
+ * Pure orchestration over [EditorCanvas].
+ */
 class EditorRenderer {
     private val white = 0xFFFFFFFF.toInt()
     private val black = 0xFF000000.toInt()
+    private val scrim = 0xC0000000.toInt()
 
     fun render(
         canvas: EditorCanvas, screenW: Int, screenH: Int, mouseX: Int, mouseY: Int,
@@ -27,6 +33,22 @@ class EditorRenderer {
 
         val boxes = ElementLayout.boxesFor(all, ctx, measurer, screenW, screenH)
         state.pruneSelection(boxes)
+
+        when (state.view) {
+            EditorView.POSITION -> drawPosition(canvas, screenW, screenH, mouseX, mouseY, boxes, modules, state)
+            EditorView.GRID -> { dim(canvas, screenW, screenH); drawGrid(canvas, screenW, screenH, modules) }
+            EditorView.CUSTOMIZE -> {
+                drawSelectedOutline(canvas, boxes, state)
+                dim(canvas, screenW, screenH)
+                drawCustomize(canvas, screenW, screenH, modules, state)
+            }
+        }
+    }
+
+    private fun drawPosition(
+        canvas: EditorCanvas, screenW: Int, screenH: Int, mouseX: Int, mouseY: Int,
+        boxes: List<ElementBox>, modules: ModuleManager, state: EditorState,
+    ) {
         val hover = hitTest(boxes, mouseX, mouseY)
         for (b in boxes) {
             val enabled = modules.hudById(b.id)?.enabled ?: true
@@ -38,22 +60,79 @@ class EditorRenderer {
             }
             canvas.border(b.rect.left - 1, b.rect.top - 1, b.rect.width + 2, b.rect.height + 2, color)
         }
-
-        canvas.drawText(6, 6, "Drag to move · click to select · Esc/Done to save", MaevePalette.text)
-        drawButtons(canvas, screenW, screenH, state)
-        state.selectedId?.let { drawPanel(canvas, it, screenW, screenH, modules, state) }
-        if (state.browserOpen) drawBrowser(canvas, screenW, modules)
+        canvas.drawText(6, 6, "Drag to reposition · Mods to customize · Esc/Done to save", MaevePalette.text)
+        drawLogo(canvas, screenW, screenH)
+        button(canvas, PositionLayout.modsButton(screenW, screenH), "Mods", false)
+        button(canvas, PositionLayout.doneButton(screenW, screenH), "Done", false)
     }
 
-    private fun drawPanel(canvas: EditorCanvas, sel: String, screenW: Int, screenH: Int, modules: ModuleManager, state: EditorState) {
-        val module = modules.hudById(sel) ?: return
-        val st = module.style
-        val pr = PanelLayout.panelRect(screenW, screenH)
-        canvas.fill(pr.left, pr.top, pr.width, pr.height, MaevePalette.surface)
-        canvas.border(pr.left, pr.top, pr.width, pr.height, MaevePalette.outline)
-        canvas.drawText(pr.left + 8, pr.top + 8, module.displayName, MaevePalette.gold)
+    private fun drawLogo(canvas: EditorCanvas, screenW: Int, screenH: Int) {
+        val r = PositionLayout.logoRect(screenW, screenH)
+        val cx = r.left + r.width / 2
+        val cy = r.top + r.height / 2
+        val text = "MAEVE"
+        val tw = canvas.textWidth(text)
+        canvas.withScale(PositionLayout.LOGO_SCALE, cx, cy) {
+            canvas.drawText(-tw / 2, -canvas.lineHeight / 2, text, MaevePalette.gold)
+        }
+        val ruleW = (tw * PositionLayout.LOGO_SCALE).toInt()
+        canvas.fill(cx - ruleW / 2, r.bottom, ruleW, 1, MaevePalette.gold)
+    }
 
-        val controls = PanelLayout.controls(pr.left, PanelLayout.TOP).associateBy { it.id }
+    private fun drawGrid(canvas: EditorCanvas, screenW: Int, screenH: Int, modules: ModuleManager) {
+        val mods = modules.all().toList()
+        val panel = GridLayout.panelRect(screenW, screenH, mods.size)
+        canvas.fill(panel.left, panel.top, panel.width, panel.height, MaevePalette.surface)
+        canvas.border(panel.left, panel.top, panel.width, panel.height, MaevePalette.gold)
+        canvas.drawText(panel.left + 56, panel.top + 6, "Modules", MaevePalette.gold)
+        button(canvas, GridLayout.backButton(screenW, screenH, mods.size), "Back", false)
+        val cards = GridLayout.cards(screenW, screenH, mods.size)
+        for (i in mods.indices) drawCard(canvas, cards[i], mods[i].displayName, mods[i].enabled)
+    }
+
+    private fun drawCard(canvas: EditorCanvas, r: Rect, name: String, enabled: Boolean) {
+        canvas.fill(r.left, r.top, r.width, r.height, MaevePalette.elevated)
+        canvas.border(r.left, r.top, r.width, r.height, if (enabled) MaevePalette.primary else MaevePalette.outline)
+        canvas.drawText(r.left + 6, r.top + 6, name, white)
+        val pillW = 30; val pillH = 12
+        val px = r.left + 6; val py = r.bottom - pillH - 5
+        canvas.fill(px, py, pillW, pillH, if (enabled) MaevePalette.primary else MaevePalette.surface)
+        canvas.border(px, py, pillW, pillH, MaevePalette.outline)
+        canvas.drawText(px + 5, py + 2, if (enabled) "ON" else "OFF", white)
+    }
+
+    private fun drawSelectedOutline(canvas: EditorCanvas, boxes: List<ElementBox>, state: EditorState) {
+        val sel = state.customizing ?: return
+        val b = boxes.firstOrNull { it.id == sel }?.rect ?: return
+        canvas.border(b.left - 1, b.top - 1, b.width + 2, b.height + 2, MaevePalette.gold)
+    }
+
+    private fun drawCustomize(canvas: EditorCanvas, screenW: Int, screenH: Int, modules: ModuleManager, state: EditorState) {
+        val sel = state.customizing ?: return
+        val module = modules.byId(sel) ?: return
+        val hud = modules.hudById(sel)
+        val popup = CustomizeLayout.popupRect(screenW, screenH, hud != null)
+        canvas.fill(popup.left, popup.top, popup.width, popup.height, MaevePalette.surface)
+        canvas.border(popup.left, popup.top, popup.width, popup.height, MaevePalette.gold)
+        canvas.drawText(popup.left + 10, popup.top + 6, module.displayName, MaevePalette.gold)
+        val cb = CustomizeLayout.closeButton(popup)
+        canvas.fill(cb.left, cb.top, cb.width, cb.height, MaevePalette.elevated)
+        canvas.border(cb.left, cb.top, cb.width, cb.height, MaevePalette.outline)
+        canvas.drawText(cb.left + 3, cb.top + 2, "x", white)
+
+        if (hud != null) {
+            drawStyleControls(canvas, hud, popup, state)
+        } else {
+            val en = CustomizeLayout.enableToggle(popup)
+            canvas.fill(en.left, en.top, en.width, en.height, if (module.enabled) MaevePalette.primary else MaevePalette.elevated)
+            canvas.border(en.left, en.top, en.width, en.height, MaevePalette.outline)
+            canvas.drawText(en.left + 4, en.top + 3, if (module.enabled) "Enabled" else "Disabled", white)
+        }
+    }
+
+    private fun drawStyleControls(canvas: EditorCanvas, module: HudModule, popup: Rect, state: EditorState) {
+        val st = module.style
+        val controls = CustomizeLayout.controls(popup).associateBy { it.id }
         controls["preview"]?.rect?.let { r ->
             checker(canvas, r.left, r.top, r.width, r.height)
             canvas.fill(r.left, r.top, r.width, r.height, st.color)
@@ -68,11 +147,10 @@ class EditorRenderer {
             val text = if (state.isHexFocused) "#" + state.hexText + "_" else HexColor.encode(st.color)
             canvas.drawText(r.left + 3, r.top + 2, text, MaevePalette.text)
         }
-
         for ((id, c) in controls) {
             val r = c.rect
             when {
-                id in PanelLayout.TOGGLES -> {
+                id == "visible" || id in CustomizeLayout.TOGGLES -> {
                     val on = when (id) {
                         "visible" -> module.enabled; "bold" -> st.bold; "italic" -> st.italic
                         "underline" -> st.underline; "strike" -> st.strikethrough; "shadow" -> st.shadow
@@ -86,7 +164,7 @@ class EditorRenderer {
                     canvas.fill(r.left, r.top, r.width, r.height, MaevePalette.elevated)
                     canvas.border(r.left, r.top, r.width, r.height, MaevePalette.outline)
                     canvas.drawText(r.left + 7, r.top + 3, if (id == "scale-") "-" else "+", white)
-                    if (id == "scale+") canvas.drawText(pr.left + 34, r.top + 3, "x%.2f".format(st.scale), MaevePalette.text2)
+                    if (id == "scale+") canvas.drawText(r.left - 34, r.top + 3, "x%.2f".format(st.scale), MaevePalette.text2)
                 }
                 id == "reset" -> {
                     canvas.fill(r.left, r.top, r.width, r.height, MaevePalette.elevated)
@@ -95,7 +173,7 @@ class EditorRenderer {
                 }
                 id.startsWith("swatch:") -> {
                     val idx = id.removePrefix("swatch:").toInt()
-                    canvas.fill(r.left, r.top, r.width, r.height, black or MaeveColor.rgbOf(PanelLayout.SWATCHES[idx]))
+                    canvas.fill(r.left, r.top, r.width, r.height, black or MaeveColor.rgbOf(CustomizeLayout.SWATCHES[idx]))
                     canvas.border(r.left, r.top, r.width, r.height, MaevePalette.outline)
                 }
             }
@@ -153,9 +231,8 @@ class EditorRenderer {
         }
     }
 
-    private fun drawButtons(canvas: EditorCanvas, screenW: Int, screenH: Int, state: EditorState) {
-        button(canvas, ModuleBrowserLayout.modulesButton(screenW, screenH), "Modules", state.browserOpen)
-        button(canvas, ModuleBrowserLayout.doneButton(screenW, screenH), "Done", false)
+    private fun dim(canvas: EditorCanvas, screenW: Int, screenH: Int) {
+        canvas.fill(0, 0, screenW, screenH, scrim)
     }
 
     private fun button(canvas: EditorCanvas, r: Rect, text: String, active: Boolean) {
@@ -164,28 +241,8 @@ class EditorRenderer {
         canvas.drawText(r.left + 6, r.top + 4, text, white)
     }
 
-    private fun drawBrowser(canvas: EditorCanvas, screenW: Int, modules: ModuleManager) {
-        val mods = modules.all().toList()
-        val panel = ModuleBrowserLayout.panelRect(screenW, mods.size)
-        canvas.fill(panel.left, panel.top, panel.width, panel.height, MaevePalette.surface)
-        canvas.border(panel.left, panel.top, panel.width, panel.height, MaevePalette.gold)
-        canvas.drawText(panel.left + 8, panel.top + 5, "Modules", MaevePalette.gold)
-        val rows = ModuleBrowserLayout.rows(screenW, mods.map { it.id })
-        for (i in mods.indices) {
-            val m = mods[i]; val r = rows[i].second
-            canvas.fill(r.left, r.top, r.width, r.height, MaevePalette.elevated)
-            canvas.border(r.left, r.top, r.width, r.height, MaevePalette.outline)
-            canvas.drawText(r.left + 6, r.top + 4, m.displayName, white)
-            val pillW = 34
-            val px = r.right - pillW - 4
-            canvas.fill(px, r.top + 2, pillW, r.height - 4, if (m.enabled) MaevePalette.primary else MaevePalette.surface)
-            canvas.border(px, r.top + 2, pillW, r.height - 4, MaevePalette.outline)
-            canvas.drawText(px + 6, r.top + 4, if (m.enabled) "ON" else "OFF", white)
-        }
-    }
-
     private fun label(id: String) = when (id) {
-        "visible" -> "Visible"; "bold" -> "Bold"; "italic" -> "Italic"; "underline" -> "Underline"
+        "visible" -> "Enabled"; "bold" -> "Bold"; "italic" -> "Italic"; "underline" -> "Underline"
         "strike" -> "Strikethrough"; "shadow" -> "Shadow"; "background" -> "Background"; else -> id
     }
 }

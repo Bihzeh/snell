@@ -1,26 +1,33 @@
 package gg.maeve.mod.editor
 
 import gg.maeve.mod.config.HexColor
-import gg.maeve.mod.module.HudModule
 import gg.maeve.mod.module.ModuleManager
 import kotlin.math.roundToInt
 
+/** The three editor tiers. POSITION: drag modules + Maeve logo + "Mods" button (no styling).
+ *  GRID: a card per module reached from "Mods". CUSTOMIZE: a centered popup of one module's
+ *  available customizations. Right-Shift opens POSITION; the user drills inward via "Mods". */
+enum class EditorView { POSITION, GRID, CUSTOMIZE }
+
 /**
  * Pure, immediate-mode editor interaction state. Drives the editor screen from raw mouse/char
- * events without any Minecraft types, so it is fully unit-testable. Holds the live HSVA being
- * edited for the selected element's color; the SV square / hue / alpha bars / hex field all
- * read and write it. Control mutations go through ModuleManager setters (live preview); the
- * screen persists once on close.
+ * events without any Minecraft types, so it is fully unit-testable. A small view machine
+ * (POSITION -> GRID -> CUSTOMIZE) gates which interactions are live. In CUSTOMIZE it holds the
+ * live HSVA being edited for the selected element's color. Control mutations go through
+ * ModuleManager setters (live preview); the screen persists once on close.
  */
 class EditorState {
+    var view: EditorView = EditorView.POSITION
+        private set
     var selectedId: String? = null
         private set
     var dirty: Boolean = false
         private set
-    var browserOpen: Boolean = false
-        private set
     var closeRequested: Boolean = false
         private set
+
+    /** The module whose customization popup is open (null unless in CUSTOMIZE). */
+    val customizing: String? get() = if (view == EditorView.CUSTOMIZE) selectedId else null
 
     private var dragId: String? = null
     private var startMouseX = 0
@@ -45,14 +52,57 @@ class EditorState {
     val isHexFocused get() = hexFocused
     val hexText get() = hexBuffer
 
-    fun onPress(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, boxes: List<ElementBox>, modules: ModuleManager): Boolean {
-        if (ModuleBrowserLayout.doneButton(screenW, screenH).contains(mouseX, mouseY)) { closeRequested = true; return true }
-        if (ModuleBrowserLayout.modulesButton(screenW, screenH).contains(mouseX, mouseY)) { browserOpen = !browserOpen; return true }
-        if (browserOpen) return onBrowserPress(mouseX, mouseY, screenW, modules)
-        if (selectedId != null && mouseX >= screenW - PanelLayout.WIDTH) {
-            val ctrl = PanelLayout.controls(screenW - PanelLayout.WIDTH, PanelLayout.TOP)
-                .firstOrNull { it.rect.contains(mouseX, mouseY) }
-            if (ctrl == null) { hexFocused = false; activeColor = null; return true }
+    fun onPress(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, boxes: List<ElementBox>, modules: ModuleManager): Boolean =
+        when (view) {
+            EditorView.POSITION -> onPositionPress(mouseX, mouseY, screenW, screenH, boxes)
+            EditorView.GRID -> onGridPress(mouseX, mouseY, screenW, screenH, modules)
+            EditorView.CUSTOMIZE -> onCustomizePress(mouseX, mouseY, screenW, screenH, modules)
+        }
+
+    private fun onPositionPress(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, boxes: List<ElementBox>): Boolean {
+        if (PositionLayout.doneButton(screenW, screenH).contains(mouseX, mouseY)) { closeRequested = true; return true }
+        if (PositionLayout.modsButton(screenW, screenH).contains(mouseX, mouseY)) { view = EditorView.GRID; return true }
+        val id = hitTest(boxes, mouseX, mouseY)
+        selectedId = id
+        if (id == null) { dragId = null; return false }
+        val box = boxes.first { it.id == id }.rect
+        dragId = id
+        startMouseX = mouseX; startMouseY = mouseY
+        startLeft = box.left; startTop = box.top
+        dragW = box.width; dragH = box.height
+        return true
+    }
+
+    private fun onGridPress(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, modules: ModuleManager): Boolean {
+        val mods = modules.all().toList()
+        if (GridLayout.backButton(screenW, screenH, mods.size).contains(mouseX, mouseY)) { view = EditorView.POSITION; return true }
+        val cards = GridLayout.cards(screenW, screenH, mods.size)
+        val idx = cards.indexOfFirst { it.contains(mouseX, mouseY) }
+        if (idx >= 0) {
+            val m = mods[idx]
+            selectedId = m.id
+            view = EditorView.CUSTOMIZE
+            hexFocused = false; activeColor = null
+            if (modules.hudById(m.id) != null) loadColor(modules)
+            return true
+        }
+        if (GridLayout.panelRect(screenW, screenH, mods.size).contains(mouseX, mouseY)) return true // inside panel, not a card
+        view = EditorView.POSITION // click-away closes the grid
+        return true
+    }
+
+    private fun onCustomizePress(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, modules: ModuleManager): Boolean {
+        val sel = selectedId
+        val isHud = sel != null && modules.hudById(sel) != null
+        val popup = CustomizeLayout.popupRect(screenW, screenH, isHud)
+        if (CustomizeLayout.closeButton(popup).contains(mouseX, mouseY)) { backToGrid(); return true }
+        if (sel == null) return true
+        if (isHud) {
+            val ctrl = CustomizeLayout.controls(popup).firstOrNull { it.rect.contains(mouseX, mouseY) }
+            if (ctrl == null) {
+                if (popup.contains(mouseX, mouseY)) { hexFocused = false; activeColor = null; return true }
+                backToGrid(); return true // click-away returns to the grid
+            }
             when {
                 ctrl.id in PICKERS -> {
                     activeColor = ctrl.id; hexFocused = false
@@ -63,28 +113,27 @@ class EditorState {
             }
             return true
         }
-        val id = hitTest(boxes, mouseX, mouseY)
-        val previous = selectedId
-        selectedId = id
-        if (id == null) { dragId = null; return false }
-        val box = boxes.first { it.id == id }.rect
-        dragId = id
-        startMouseX = mouseX; startMouseY = mouseY
-        startLeft = box.left; startTop = box.top
-        dragW = box.width; dragH = box.height
-        if (id != previous) loadColor(modules)
-        return true
+        // Non-HUD module: a single enable toggle.
+        if (CustomizeLayout.enableToggle(popup).contains(mouseX, mouseY)) {
+            val m = modules.byId(sel) ?: return true
+            modules.setEnabled(sel, !m.enabled); dirty = true
+            return true
+        }
+        if (popup.contains(mouseX, mouseY)) return true
+        backToGrid(); return true
     }
 
     fun onDrag(mouseX: Int, mouseY: Int, screenW: Int, screenH: Int, modules: ModuleManager): Boolean {
         activeColor?.let { ac ->
-            val rect = PanelLayout.controls(screenW - PanelLayout.WIDTH, PanelLayout.TOP).first { it.id == ac }.rect
+            val popup = CustomizeLayout.popupRect(screenW, screenH, true)
+            val rect = CustomizeLayout.controlRect(popup, ac) ?: return true
             setPickerValue(ac, rect, mouseX, mouseY); applyEditColor(modules)
             return true
         }
+        if (view != EditorView.POSITION) { dragId = null; return false } // tier contract: element drag is POSITION-only
         val id = dragId ?: return false
         val maxLeft = (screenW - dragW).coerceAtLeast(0)
-        val maxTop = (screenH - 24 - dragH).coerceAtLeast(0) // keep elements above the bottom button bar
+        val maxTop = (screenH - dragH).coerceAtLeast(0)
         val left = (startLeft + (mouseX - startMouseX)).coerceIn(0, maxLeft)
         val top = (startTop + (mouseY - startMouseY)).coerceIn(0, maxTop)
         val moved = Rect(left, top, dragW, dragH)
@@ -102,6 +151,13 @@ class EditorState {
         return was
     }
 
+    /** Pop one tier: CUSTOMIZE -> GRID -> POSITION. Returns false at POSITION (caller closes). */
+    fun goBack(): Boolean = when (view) {
+        EditorView.CUSTOMIZE -> { backToGrid(); true }
+        EditorView.GRID -> { view = EditorView.POSITION; true }
+        EditorView.POSITION -> false
+    }
+
     fun onCharTyped(ch: Char, modules: ModuleManager): Boolean {
         if (!hexFocused) return false
         if (hexBuffer.length < 8 && (ch in '0'..'9' || ch in 'a'..'f' || ch in 'A'..'F')) {
@@ -117,24 +173,12 @@ class EditorState {
     }
 
     fun pruneSelection(boxes: List<ElementBox>) {
+        if (view == EditorView.CUSTOMIZE) return // keep the popup's target stable
         val sel = selectedId ?: return
         if (boxes.none { it.id == sel }) { selectedId = null; dragId = null; activeColor = null }
     }
 
-    private fun onBrowserPress(mouseX: Int, mouseY: Int, screenW: Int, modules: ModuleManager): Boolean {
-        val ids = modules.all().map { it.id }
-        val row = ModuleBrowserLayout.rows(screenW, ids).firstOrNull { it.second.contains(mouseX, mouseY) }
-        if (row != null) {
-            val module = modules.byId(row.first) ?: return true
-            modules.setEnabled(row.first, !module.enabled)
-            dirty = true
-            if (module is HudModule) { selectedId = row.first; loadColor(modules); browserOpen = false }
-            return true
-        }
-        if (ModuleBrowserLayout.panelRect(screenW, ids.size).contains(mouseX, mouseY)) return true // inside panel, not on a row
-        browserOpen = false
-        return false // click-away: close the browser and let the click select/drag the element under it
-    }
+    private fun backToGrid() { view = EditorView.GRID; selectedId = null; activeColor = null; hexFocused = false }
 
     private fun setPickerValue(id: String, r: Rect, mx: Int, my: Int) {
         val fx = ((mx - r.left).toFloat() / r.width).coerceIn(0f, 1f)
@@ -187,7 +231,7 @@ class EditorState {
             id == "reset" -> modules.resetStyle(sel)
             id.startsWith("swatch:") -> {
                 val idx = id.removePrefix("swatch:").toIntOrNull() ?: return false
-                val rgb = MaeveColor.rgbOf(PanelLayout.SWATCHES.getOrNull(idx) ?: return false)
+                val rgb = MaeveColor.rgbOf(CustomizeLayout.SWATCHES.getOrNull(idx) ?: return false)
                 modules.updateStyle(sel) { it.copy(color = MaeveColor.argb(MaeveColor.alphaOf(it.color), rgb)) }
             }
             else -> return false

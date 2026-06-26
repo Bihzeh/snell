@@ -1,7 +1,6 @@
 package gg.maeve.mod.platform
 
 import gg.maeve.mod.module.ModuleManager
-import gg.maeve.mod.ui.ModMenuController
 import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
@@ -55,10 +54,6 @@ class FabricMinecraftBridge : MinecraftBridge {
                 while (key.consumeClick()) onOpen()
             },
         )
-    }
-
-    override fun openModMenu(controller: ModMenuController) {
-        Minecraft.getInstance().setScreenAndShow(MaeveMenuScreen(controller) { openHudEditor(controller.modules) })
     }
 
     override fun openHudEditor(modules: ModuleManager) {

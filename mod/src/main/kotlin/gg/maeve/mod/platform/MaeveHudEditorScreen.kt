@@ -4,6 +4,7 @@ import gg.maeve.mod.editor.EditorRenderer
 import gg.maeve.mod.editor.EditorState
 import gg.maeve.mod.editor.ElementBox
 import gg.maeve.mod.editor.ElementLayout
+import gg.maeve.mod.editor.EditorView
 import gg.maeve.mod.editor.TextMeasurer
 import gg.maeve.mod.module.ModuleManager
 import net.minecraft.client.Minecraft
@@ -16,10 +17,11 @@ import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
 
 /**
- * Drag-and-customize HUD editor. Renders a live preview of every HUD element (so even
- * hidden/out-of-world ones are positionable), lets the user drag elements to re-anchor them,
- * and shows a per-element style panel. All interaction logic is in the pure [EditorState];
- * this screen only adapts Minecraft 26.2 input/render to it. Persists once on close.
+ * Three-tier HUD editor opened by Right-Shift. POSITION lets the user drag every HUD element to
+ * re-anchor it (no styling), with the Maeve wordmark and a "Mods" button. "Mods" opens a card
+ * GRID of all modules; clicking a card opens that module's CUSTOMIZE popup (full style panel for
+ * HUD modules, an enable toggle otherwise). Esc steps back one tier; Done/Esc-at-top persists.
+ * All interaction logic is in the pure [EditorState]; this screen only adapts 26.2 input/render.
  */
 class MaeveHudEditorScreen(
     private val modules: ModuleManager,
@@ -45,7 +47,8 @@ class MaeveHudEditorScreen(
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubled: Boolean): Boolean {
-        val handled = state.onPress(event.x().toInt(), event.y().toInt(), width, height, boxes(), modules)
+        val hit = if (state.view == EditorView.POSITION) boxes() else emptyList<ElementBox>() // only POSITION hit-tests element boxes
+        val handled = state.onPress(event.x().toInt(), event.y().toInt(), width, height, hit, modules)
         if (state.closeRequested) { onClose(); return true }
         return handled || super.mouseClicked(event, doubled)
     }
@@ -57,7 +60,10 @@ class MaeveHudEditorScreen(
         state.onRelease() || super.mouseReleased(event)
 
     override fun keyPressed(event: KeyEvent): Boolean {
-        if (event.key() == GLFW.GLFW_KEY_ESCAPE) { onClose(); return true }
+        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            if (!state.goBack()) onClose() // pop a tier, or close from the position screen
+            return true
+        }
         if (event.key() == GLFW.GLFW_KEY_BACKSPACE && state.onBackspace(modules)) return true
         return super.keyPressed(event)
     }

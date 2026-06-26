@@ -1,7 +1,6 @@
 package gg.maeve.mod.platform
 
 import gg.maeve.mod.module.ModuleManager
-import gg.maeve.mod.ui.ModMenuController
 
 /**
  * The seam between Maeve's pure logic and Minecraft/Fabric internals. Everything
@@ -17,9 +16,6 @@ interface MinecraftBridge {
 
     /** Register the keybind that opens the mod menu. */
     fun installMenuKeybind(onOpen: () -> Unit)
-
-    /** Open the in-game mod menu for the given controller. */
-    fun openModMenu(controller: ModMenuController)
 
     /** Open the in-game HUD editor (drag/show-hide/style) for the given modules. */
     fun openHudEditor(modules: ModuleManager)
