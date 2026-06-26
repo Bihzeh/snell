@@ -9,15 +9,16 @@ package gg.maeve.mod.editor
  */
 object GridLayout {
     private const val COLS = 3
-    private const val CARD_W = 92
-    private const val CARD_H = 44
-    private const val GAP = 8
-    private const val TOP_PAD = 26 // room for the title + Back button
+    private const val CARD_W = 120
+    private const val CARD_H = 58
+    private const val GAP = 10
+    private const val PAD = 12
+    private const val HEADER_H = 30 // title bar + Back button
 
     fun panelRect(screenW: Int, screenH: Int, count: Int): Rect {
         val rows = ((count + COLS - 1) / COLS).coerceAtLeast(1)
-        val w = COLS * CARD_W + (COLS + 1) * GAP
-        val h = TOP_PAD + rows * (CARD_H + GAP) + GAP
+        val w = COLS * CARD_W + (COLS - 1) * GAP + PAD * 2
+        val h = HEADER_H + rows * (CARD_H + GAP) - GAP + PAD
         return Rect((screenW - w) / 2, ((screenH - h) / 2).coerceAtLeast(0), w, h)
     }
 
@@ -28,8 +29,8 @@ object GridLayout {
             val col = i % COLS
             val row = i / COLS
             Rect(
-                panel.left + GAP + col * (CARD_W + GAP),
-                panel.top + TOP_PAD + row * (CARD_H + GAP),
+                panel.left + PAD + col * (CARD_W + GAP),
+                panel.top + HEADER_H + row * (CARD_H + GAP),
                 CARD_W,
                 CARD_H,
             )
@@ -38,6 +39,9 @@ object GridLayout {
 
     fun backButton(screenW: Int, screenH: Int, count: Int): Rect {
         val panel = panelRect(screenW, screenH, count)
-        return Rect(panel.left + 6, panel.top + 4, 44, 14)
+        return Rect(panel.left + PAD, panel.top + 7, 46, 16)
     }
+
+    /** Header strip height (for the renderer's title bar). */
+    const val HEADER = HEADER_H
 }
