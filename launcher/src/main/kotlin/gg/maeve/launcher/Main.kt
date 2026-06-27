@@ -13,6 +13,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import gg.maeve.launcher.ui.LauncherViewModel
+import gg.maeve.launcher.ui.LogWindow
 import gg.maeve.launcher.ui.Shell
 import gg.maeve.launcher.ui.chrome.WindowChrome
 import gg.maeve.launcher.ui.theme.MaeveTheme
@@ -46,5 +47,9 @@ fun main() = application {
             LaunchedEffect(Unit) { vm.checkForUpdates() }
             Shell(vm, chrome)
         }
+    }
+
+    if (vm.showLogWindow && vm.logWindowOpen) {
+        LogWindow(vm) { vm.logWindowOpen = false }
     }
 }

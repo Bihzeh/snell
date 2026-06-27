@@ -58,5 +58,22 @@ fun main() {
     render("10-friends", W, H) { Shell(signedIn(Screen.FRIENDS)) }
     render("11-home-night", W, H) { CompositionLocalProvider(LocalSkyTimeOverride provides 0.96f) { Shell(signedIn(Screen.HOME)) } }
     render("12-home-sunset", W, H) { CompositionLocalProvider(LocalSkyTimeOverride provides 0.80f) { Shell(signedIn(Screen.HOME)) } }
+    render("13-logs", 780, 480) {
+        LogPanel(vm {
+            playing = true
+            listOf(
+                "[12:00:01] [main/INFO]: Setting user: Bihzeh",
+                "[12:00:01] [main/INFO]: Loading Minecraft 26.2 with Fabric Loader 0.19.3",
+                "[12:00:02] [main/INFO]: Sodium Renderer initialized",
+                "[12:00:02] [main/INFO]: Lithium loaded 137 optimizations",
+                "[12:00:03] [main/WARN]: Mod 'maeve' uses a deprecated API",
+                "[12:00:03] [Render thread/INFO]: OpenAL initialized",
+                "[12:00:05] [main/INFO]: Maeve HUD enabled",
+                "[12:00:06] [Server thread/INFO]: Preparing spawn area: 84%",
+                "[12:00:07] [main/ERROR]: Failed to load optional shader pack",
+                "[12:00:08] [Render thread/INFO]: Loaded 12 advancements",
+            ).forEach { log.add(it) }
+        })
+    }
     println("ui preview done")
 }

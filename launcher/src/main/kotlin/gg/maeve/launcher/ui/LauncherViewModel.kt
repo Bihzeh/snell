@@ -56,6 +56,8 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     var closeOnLaunch by mutableStateOf(true)
     var autoUpdate by mutableStateOf(true)
     var minimizeToTray by mutableStateOf(false)
+    var showLogWindow by mutableStateOf(true)
+    var logWindowOpen by mutableStateOf(false)
     val dataDir: Path get() = MaevePaths.default().root
 
     private fun ui(block: () -> Unit) = SwingUtilities.invokeLater(block)
@@ -129,6 +131,7 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     fun play() {
         val s = session ?: return
         playing = true; playExit = null; playError = null; log.clear()
+        if (showLogWindow) logWindowOpen = true
         val enabled = mods.filterValues { it }.keys.toSet()
         scope.launch(Dispatchers.IO) {
             runCatching {

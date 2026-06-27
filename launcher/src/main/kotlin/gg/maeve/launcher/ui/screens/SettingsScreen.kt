@@ -97,6 +97,7 @@ fun SettingsScreen(vm: LauncherViewModel) {
                 ToggleRow("Close launcher when the game starts", vm.closeOnLaunch) { vm.closeOnLaunch = it }
                 ToggleRow("Keep Maeve up to date automatically", vm.autoUpdate) { vm.autoUpdate = it }
                 ToggleRow("Minimize to system tray", vm.minimizeToTray) { vm.minimizeToTray = it }
+                ToggleRow("Show live game logs on launch", vm.showLogWindow) { vm.showLogWindow = it }
             }
 
             SectionLabel("About")
