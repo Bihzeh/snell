@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -124,11 +125,18 @@ fun DynamicSky(modifier: Modifier = Modifier) {
     var frac by remember { mutableStateOf(override ?: currentDayFraction()) }
     var anim by remember { mutableStateOf(0f) }
     if (override == null) {
-        LaunchedEffect(Unit) {
-            while (true) {
-                frac = currentDayFraction()
-                if (!MaeveMotion.reduceMotion) anim += 0.7f
-                delay(700)
+        LaunchedEffect(MaeveMotion.reduceMotion) {
+            if (MaeveMotion.reduceMotion) {
+                // Reduce-motion: track time-of-day only, no ambient animation.
+                while (true) { frac = currentDayFraction(); delay(2000) }
+            } else {
+                // 60fps ambient drift off the frame clock; refresh time-of-day ~every 1.5s.
+                var t0 = 0L; var lastClock = 0L
+                withInfiniteAnimationFrameNanos { t ->
+                    if (t0 == 0L) { t0 = t; lastClock = t }
+                    anim = (t - t0) / 1_000_000_000f
+                    if (t - lastClock > 1_500_000_000L) { frac = currentDayFraction(); lastClock = t }
+                }
             }
         }
     }
