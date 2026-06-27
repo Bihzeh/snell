@@ -48,12 +48,6 @@ fun ModsScreen(vm: LauncherViewModel) {
                 statusLabel = "Active", statusKind = PillKind.Online,
                 enabled = vm.mods["lithium"] ?: true, onToggle = { vm.mods["lithium"] = it },
             )
-            ModRow(
-                icon = "dashboard", name = "Maeve HUD", meta = "Built-in",
-                description = "FPS, coordinates and keystrokes overlay — fully customizable from the in-game menu.",
-                statusLabel = "Built-in", statusKind = PillKind.Online,
-                enabled = vm.maeveHudEnabled, onToggle = { vm.maeveHudEnabled = it },
-            )
             Spacer(Modifier.height(2.dp))
             Text(
                 "More server-legal modules (zoom, toggle-sprint, FPS readouts) are added over time.",

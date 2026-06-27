@@ -1,5 +1,6 @@
 package gg.maeve.launcher.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import gg.maeve.launcher.ui.LauncherViewModel
-import gg.maeve.launcher.ui.components.ButtonVariant
 import gg.maeve.launcher.ui.components.MaeveButton
 import gg.maeve.launcher.ui.components.MaeveCard
 import gg.maeve.launcher.ui.components.MaeveProgress
@@ -57,19 +59,27 @@ fun HomeScreen(vm: LauncherViewModel) {
 @Composable
 private fun Hero(vm: LauncherViewModel, modifier: Modifier) {
     Box(modifier.clip(RoundedCornerShape(14.dp)).border(1.dp, Maeve.border, RoundedCornerShape(14.dp))) {
-        VersionRender(Versions.MINECRAFT, Modifier.fillMaxSize())
-        // legibility scrim under the controls
-        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(220.dp)
-            .background(Brush.verticalGradient(listOf(Color.Transparent, Maeve.bg2.copy(alpha = 0.92f)))))
-        // status badge top-left
+        // Art background (no crown overlay — the player skin is the subject here).
+        VersionRender(Versions.MINECRAFT, Modifier.fillMaxSize(), showOverlay = false)
+        // Status badge top-left.
         Row(Modifier.align(Alignment.TopStart).padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SymIcon("verified", 16.dp, Maeve.accentHi)
             Text("Up to date · Fabric", color = Maeve.text2, style = MaterialTheme.typography.labelMedium)
         }
-        // bottom controls
+        // Player skin render, centered in the upper area.
+        Image(
+            painterResource("skin/player.png"),
+            contentDescription = "Player skin",
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.dp).fillMaxHeight(0.62f),
+            contentScale = ContentScale.Fit,
+        )
+        // Legibility scrim under the player card.
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(240.dp)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, Maeve.bg2.copy(alpha = 0.94f)))))
+        // Player card controls.
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (vm.playing) {
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Maeve.s1.copy(alpha = 0.85f)).border(1.dp, Maeve.border, RoundedCornerShape(12.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Maeve.s1.copy(alpha = 0.88f)).border(1.dp, Maeve.border, RoundedCornerShape(12.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Spinner(16)
                         Text(vm.playStatus.ifEmpty { "Preparing…" }, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
@@ -77,6 +87,10 @@ private fun Hero(vm: LauncherViewModel, modifier: Modifier) {
                     MaeveProgress(vm.playFraction)
                 }
             } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(vm.session?.username ?: "Player", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    SymIcon("edit", 16.dp, Maeve.text2)
+                }
                 MaeveSelectDisplay("Default profile · ${Versions.MINECRAFT}", leadingIcon = "tune")
                 PlayButton(enabled = vm.session != null, label = "Launch", onClick = vm::play)
                 val exit = vm.playExit; val err = vm.playError

@@ -30,7 +30,7 @@ import gg.maeve.launcher.ui.theme.MaeveFonts
  * the Obsidian palette (diagonal weave + emerald glow).
  */
 @Composable
-fun VersionRender(version: String, modifier: Modifier = Modifier) {
+fun VersionRender(version: String, modifier: Modifier = Modifier, showOverlay: Boolean = true) {
     val resPath = "featured/$version.png"
     val hasImage = remember(version) { Thread.currentThread().contextClassLoader?.getResource(resPath) != null }
 
@@ -40,10 +40,12 @@ fun VersionRender(version: String, modifier: Modifier = Modifier) {
         } else {
             Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Maeve.ka1, Maeve.ka2)))) {
                 Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Maeve.accent.copy(alpha = 0.20f), Color.Transparent))))
-                MaeveMark(modifier = Modifier.align(Alignment.Center), size = 132.dp, color = Maeve.accent.copy(alpha = 0.55f), gem = Maeve.accentHi.copy(alpha = 0.55f))
-                Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
-                    Text("MINECRAFT", color = Maeve.ember, letterSpacing = 2.sp, style = MaterialTheme.typography.labelSmall)
-                    Text(version, fontFamily = MaeveFonts.Display, fontWeight = FontWeight.Bold, fontSize = 46.sp, color = MaterialTheme.colorScheme.onBackground)
+                if (showOverlay) {
+                    MaeveMark(modifier = Modifier.align(Alignment.Center), size = 132.dp, color = Maeve.accent.copy(alpha = 0.55f), gem = Maeve.accentHi.copy(alpha = 0.55f))
+                    Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
+                        Text("MINECRAFT", color = Maeve.ember, letterSpacing = 2.sp, style = MaterialTheme.typography.labelSmall)
+                        Text(version, fontFamily = MaeveFonts.Display, fontWeight = FontWeight.Bold, fontSize = 46.sp, color = MaterialTheme.colorScheme.onBackground)
+                    }
                 }
             }
         }

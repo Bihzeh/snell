@@ -134,6 +134,7 @@ private fun Errored(vm: LauncherViewModel) {
     Text(vm.signInError ?: "", color = Maeve.text2, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
     Spacer(Modifier.width(2.dp))
     MaeveButton("Try again", { vm.signIn() }, leadingIcon = "refresh", fillWidth = true)
+    MaeveButton("Cancel", { vm.cancelSignIn() }, variant = ButtonVariant.Tertiary, fillWidth = true)
 }
 
 private fun open(uri: String) = runCatching {

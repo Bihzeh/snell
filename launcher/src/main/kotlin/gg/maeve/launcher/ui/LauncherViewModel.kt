@@ -52,10 +52,6 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     // settings + mods
     var maxMemoryMb by mutableStateOf(2048)
     val mods = mutableStateMapOf("sodium" to true, "lithium" to true)
-    // Maeve HUD is the bundled mod (always installed); this toggle is UI state only —
-    // it is NOT fed to enabledMods (which feeds the provisioner). HUD is configured in-game.
-    var maeveHudEnabled by mutableStateOf(true)
-
     // launcher behavior (UI state; disk persistence is a tracked follow-up)
     var closeOnLaunch by mutableStateOf(true)
     var autoUpdate by mutableStateOf(true)

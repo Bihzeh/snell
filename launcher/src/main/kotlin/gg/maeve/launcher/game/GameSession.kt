@@ -14,7 +14,7 @@ data class GameSession(
     val userType: String, // "msa" for real Microsoft accounts, "legacy" for offline
 ) {
     companion object {
-        fun offline(username: String = "MaeveDev"): GameSession {
+        fun offline(username: String = "Bihzeh"): GameSession {
             // Deterministic offline UUID from the name (matches the vanilla offline scheme).
             val uuid = UUID.nameUUIDFromBytes("OfflinePlayer:$username".toByteArray())
             return GameSession(uuid.toString(), username, accessToken = "0", userType = "legacy")

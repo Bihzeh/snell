@@ -35,7 +35,7 @@ private fun vm(block: LauncherViewModel.() -> Unit = {}) =
     LauncherViewModel(CoroutineScope(Dispatchers.Default)).apply(block)
 
 private fun signedIn(s: Screen, block: LauncherViewModel.() -> Unit = {}) = vm {
-    session = GameSession.offline("MaeveQueen"); screen = s; block()
+    session = GameSession.offline(); screen = s; block()
 }
 
 fun main() {
