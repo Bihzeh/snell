@@ -53,6 +53,7 @@ font is subset to the ~60 glyphs the UI uses.
 | Outfit | Launcher display / headings / wordmark / numerics (Regular/Medium/SemiBold/Bold) | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/outfit |
 | Hanken Grotesk | Launcher body / buttons (Regular/Medium/SemiBold/Bold/ExtraBold) | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/hankengrotesk |
 | Geist Mono | Device codes / numerics | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/geistmono |
+| Monocraft | In-launcher Minecraft-style nametag (pixel) | OFL-1.1 | https://github.com/IdreesInc/Monocraft |
 | Material Symbols Outlined (subset) | Launcher icons (wght 400 / opsz 24 / FILL 0) | Apache-2.0 | https://github.com/google/material-design-icons |
 | Poppins | In-game HUD font pack only (`:mod`, weighted) | OFL-1.1 | https://github.com/google/fonts/tree/main/ofl/poppins |
 

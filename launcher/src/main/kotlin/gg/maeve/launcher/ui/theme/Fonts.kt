@@ -32,4 +32,7 @@ object MaeveFonts {
     val Mono: FontFamily = FontFamily(
         Font("fonts/GeistMono.ttf", FontWeight.Normal),
     )
+
+    /** Monocraft (OFL) - Minecraft-style pixel font, used for the in-launcher nametag. */
+    val Pixel: FontFamily = FontFamily(Font("fonts/Monocraft.ttf"))
 }

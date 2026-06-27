@@ -12,6 +12,8 @@ import gg.maeve.launcher.update.UpdateState
 import gg.maeve.launcher.ui.theme.MaeveTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.CompositionLocalProvider
+import gg.maeve.launcher.ui.components.LocalSkyTimeOverride
 import org.jetbrains.skia.EncodedImageFormat
 import java.io.File
 
@@ -43,9 +45,9 @@ fun main() {
     render("01-signin-idle", W, H) { Shell(vm()) }
     render("02-signin-code", W, H) { Shell(vm { prompt = DeviceCodePrompt("QKZP-RTLM", "https://microsoft.com/link", 900, "") }) }
     render("03-signin-error", W, H) { Shell(vm { signInError = "That code expired before sign-in finished." }) }
-    render("04-home", W, H) { Shell(signedIn(Screen.HOME)) }
+    render("04-home", W, H) { CompositionLocalProvider(LocalSkyTimeOverride provides 0.42f) { Shell(signedIn(Screen.HOME)) } }
     render("05-home-progress", W, H) {
-        Shell(signedIn(Screen.HOME) { playing = true; playStatus = "Downloading assets 45/100"; playFraction = 0.45f })
+        CompositionLocalProvider(LocalSkyTimeOverride provides 0.42f) { Shell(signedIn(Screen.HOME) { playing = true; playStatus = "Downloading assets 45/100"; playFraction = 0.45f }) }
     }
     render("06-home-update", W, H) {
         Shell(signedIn(Screen.HOME) { update = UpdateState.Available(UpdateInfo(SemVer(0, 1, 5), "v0.1.5", "https://dl/x.exe", "Maeve-0.1.5.exe", null)) })
@@ -54,5 +56,7 @@ fun main() {
     render("08-settings", W, H) { Shell(signedIn(Screen.SETTINGS)) }
     render("09-cosmetics", W, H) { Shell(signedIn(Screen.COSMETICS)) }
     render("10-friends", W, H) { Shell(signedIn(Screen.FRIENDS)) }
+    render("11-home-night", W, H) { CompositionLocalProvider(LocalSkyTimeOverride provides 0.96f) { Shell(signedIn(Screen.HOME)) } }
+    render("12-home-sunset", W, H) { CompositionLocalProvider(LocalSkyTimeOverride provides 0.80f) { Shell(signedIn(Screen.HOME)) } }
     println("ui preview done")
 }

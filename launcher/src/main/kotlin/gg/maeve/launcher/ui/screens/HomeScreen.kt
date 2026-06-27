@@ -1,12 +1,13 @@
 package gg.maeve.launcher.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,16 +29,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import gg.maeve.launcher.ui.LauncherViewModel
+import gg.maeve.launcher.ui.components.DynamicSky
 import gg.maeve.launcher.ui.components.MaeveButton
 import gg.maeve.launcher.ui.components.MaeveCard
 import gg.maeve.launcher.ui.components.MaeveProgress
+import gg.maeve.launcher.ui.components.NameTag
 import gg.maeve.launcher.ui.components.PillKind
 import gg.maeve.launcher.ui.components.RotatableSkin
 import gg.maeve.launcher.ui.components.SectionLabel
@@ -75,13 +76,19 @@ fun HomeScreen(vm: LauncherViewModel) {
 @Composable
 private fun LaunchCard(vm: LauncherViewModel, modifier: Modifier) {
     Box(modifier.fillMaxSize().clip(RoundedCornerShape(14.dp)).border(1.dp, Maeve.border, RoundedCornerShape(14.dp))) {
-        Image(painterResource("hero/mc-bg.png"), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
-        RotatableSkin(frameCount = 24, modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.9f))
-        Row(Modifier.align(Alignment.TopCenter).padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text((vm.session?.username ?: "Player").uppercase(), fontFamily = MaeveFonts.Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, letterSpacing = 3.sp, color = Color.White)
-            Spacer(Modifier.width(8.dp))
-            SymIcon("edit", 16.dp, Color.White.copy(alpha = 0.7f))
+        // Dynamic day/night Minecraft sky (follows local time).
+        DynamicSky(Modifier.fillMaxSize())
+        // Subtle bottom scrim for the launch bar.
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f)))))
+        // Skin with the Minecraft nametag directly above its head.
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val skinH = maxHeight * 0.78f
+            Column(Modifier.align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
+                NameTag(vm.session?.username ?: "Player")
+                Spacer(Modifier.height(6.dp))
+                RotatableSkin(frameCount = 24, modifier = Modifier.height(skinH).aspectRatio(360f / 464f))
+            }
         }
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp)) {
             if (vm.playing) {
