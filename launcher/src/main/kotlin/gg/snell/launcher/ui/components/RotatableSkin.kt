@@ -20,12 +20,12 @@ import androidx.compose.ui.res.useResource
  * LabyMod-style "grab and rotate" quirk. Frames live at `skin/rot/NN.png` (0..[frameCount]-1),
  * pre-cropped at the knees.
  *
- * The frames are 360x464 hard-edged renders, so on a large launch card they get upscaled. We
- * decode each to an [ImageBitmap] (cached per frame, decoded lazily the first time it's shown
- * while rotating) and draw with [FilterQuality.None] — nearest-neighbour. The default bilinear
- * smears the crisp pixel edges into a soft/blurry mush as the upscale factor grows; nearest
- * keeps them sharp at any size. The real ceiling is re-baking the frames at a higher resolution
- * (the source was downscaled when baked); this just stops us blurring what's already there.
+ * The frames are 720x928 anti-aliased NMSR renders (baked at NMSR width=900 then knee-cropped),
+ * which roughly match the launch card's display size. We decode each to an [ImageBitmap] (cached
+ * per frame, decoded lazily the first time it's shown while rotating) and draw with
+ * [FilterQuality.High] so the small up/down-scaling on the card resamples smoothly instead of
+ * aliasing. (For the old low-res frames nearest-neighbour was better; with real resolution,
+ * smooth filtering wins.)
  *
  * Frames are baked for the reference skin for now; this swaps to a runtime per-user fetch (by the
  * signed-in UUID) once real Microsoft auth lands.
@@ -47,7 +47,7 @@ fun RotatableSkin(
         bitmap = bitmap,
         contentDescription = "Player skin — drag to rotate",
         contentScale = ContentScale.Fit,
-        filterQuality = FilterQuality.None,
+        filterQuality = FilterQuality.High,
         modifier = modifier.pointerInput(frameCount) {
             detectHorizontalDragGestures { change, dragAmount ->
                 change.consume()
