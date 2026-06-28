@@ -1,6 +1,6 @@
 name: Dev build (bypass enabled)
 
-# Manual only. Builds a dev installer with the offline bypass ON (-Pmaeve.dev=true) and
+# Manual only. Builds a dev installer with the offline bypass ON (-Psnell.dev=true) and
 # uploads it as a CI artifact (login-gated) — it is NEVER attached to a public Release.
 # Public release.yml builds without the flag, so its installers have no offline path.
 
@@ -19,15 +19,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build dev app image (bypass enabled)
         shell: bash
-        run: ./gradlew :launcher:createReleaseDistributable -Pmaeve.dev=true --no-daemon --console=plain
+        run: ./gradlew :launcher:createReleaseDistributable -Psnell.dev=true --no-daemon --console=plain
       - name: Build dev .exe installer
         shell: bash
         continue-on-error: true
-        run: ./gradlew :launcher:packageReleaseExe -Pmaeve.dev=true --no-daemon --console=plain
+        run: ./gradlew :launcher:packageReleaseExe -Psnell.dev=true --no-daemon --console=plain
       - name: Upload dev build
         uses: actions/upload-artifact@v4
         with:
-          name: maeve-DEV-build
+          name: snell-DEV-build
           path: |
             launcher/build/compose/binaries/main-release/app/**
             launcher/build/compose/binaries/main-release/exe/*.exe

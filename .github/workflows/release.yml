@@ -27,7 +27,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # App image: a folder containing Maeve.exe. Always works (no WiX needed).
+      # App image: a folder containing Snell.exe. Always works (no WiX needed).
       - name: Build app image
         shell: bash
         run: ./gradlew :launcher:createReleaseDistributable --no-daemon --console=plain
@@ -52,17 +52,17 @@ jobs:
           sha256sum exe/*.exe msi/*.msi 2>/dev/null | awk '{n=$2; sub(/.*\//,"",n); print $1"  "n}' > SHA256SUMS.txt || true
           cat SHA256SUMS.txt || true
 
-      - name: Upload app image (runnable folder with Maeve.exe)
+      - name: Upload app image (runnable folder with Snell.exe)
         uses: actions/upload-artifact@v4
         with:
-          name: maeve-launcher-windows-app
+          name: snell-launcher-windows-app
           path: launcher/build/compose/binaries/main-release/app/**
           if-no-files-found: error
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
-          name: maeve-launcher-windows-installers
+          name: snell-launcher-windows-installers
           path: |
             launcher/build/compose/binaries/main-release/exe/*.exe
             launcher/build/compose/binaries/main-release/msi/*.msi

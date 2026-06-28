@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 439 160" width="439" height="160">
+  <rect width="439" height="160" rx="28" fill="#14121E"/>
+  <rect x="1" y="1" width="437" height="158" rx="27" fill="none" stroke="#241F38" stroke-width="1.5"/>
+  <!-- Snell slipstream mark (256x256 master scaled into the 240 lockup tile) -->
+  <g transform="translate(20,20) scale(0.5)">
+    <rect width="240" height="240" rx="54" ry="54" fill="#0B0E14"/>
+    <rect x="0.75" y="0.75" width="238.5" height="238.5" rx="53.25" ry="53.25" fill="none" stroke="#2C2746" stroke-width="1.5"/>
+    <g transform="scale(0.9375)" stroke-linecap="round" fill="none">
+      <path d="M70 86 H186" stroke="#1AA0D9" stroke-width="22"/>
+      <path d="M52 128 H204" stroke="#00D9FF" stroke-width="26"/>
+      <path d="M76 170 H180" stroke="#0E6FA8" stroke-width="22"/>
+    </g>
+  </g>
+    <!-- wordmark: "Snell" in a logical serif (font-independent, always available to Batik) -->
+  <text x="172" y="108" font-family="serif" font-size="82" font-weight="500" letter-spacing="1" fill="#ECEAF5">Snell</text>
+</svg>

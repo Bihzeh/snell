@@ -37,7 +37,7 @@ Never redistributed. The launcher downloads official game files from Mojang
 endpoints; auth uses the official Microsoft OAuth flow (ADR-0006). Mojang mappings
 are used under Mojang's license — review its terms before distribution.
 
-## Maeve's own code
+## Snell's own code
 
 Proprietary — see top-level `LICENSE` (decision: ADR-0009).
 

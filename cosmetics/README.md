@@ -3,7 +3,7 @@
 A cosmetic is a **model descriptor** (JSON) plus one or more **textures** (PNG).
 The catalog and per-user ownership live in the backend (Phase 3); these files are
 the asset payload referenced by `modelKey` / `textureKeys` in the shared DTOs
-(`gg.maeve.shared.Cosmetic`).
+(`gg.snell.shared.Cosmetic`).
 
 ## Model descriptor
 

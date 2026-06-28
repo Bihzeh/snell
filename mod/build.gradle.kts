@@ -8,7 +8,7 @@
 //   * Compile against JDK 25.
 
 plugins {
-    id("maeve.kotlin-common")
+    id("snell.kotlin-common")
     alias(libs.plugins.fabric.loom)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -21,7 +21,7 @@ dependencies {
     implementation(libs.fabric.language.kotlin)
 
     // Shared cosmetics protocol + version constants. include() JiJ-nests shared.jar
-    // inside the mod jar so the Fabric classloader can load gg.maeve.shared.* at runtime
+    // inside the mod jar so the Fabric classloader can load gg.snell.shared.* at runtime
     // (Phase 3 cosmetics reference it); implementation() gives compile-time visibility.
     include(project(":shared"))
     implementation(project(":shared"))
@@ -34,7 +34,7 @@ tasks.test { useJUnitPlatform() }
 
 loom {
     mixin {
-        defaultRefmapName.set("maeve.refmap.json")
+        defaultRefmapName.set("snell.refmap.json")
     }
 }
 

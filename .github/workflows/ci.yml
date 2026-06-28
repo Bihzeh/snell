@@ -34,18 +34,18 @@ jobs:
         run: ./gradlew :mod:build :launcher:build
         continue-on-error: true
 
-      # Guard the shipping path: the launcher jar must embed the Maeve mod, and the mod
+      # Guard the shipping path: the launcher jar must embed the Snell mod, and the mod
       # jar must JiJ-nest :shared. Catches a broken bundle before it reaches a release.
-      - name: Verify launcher bundles the Maeve mod
+      - name: Verify launcher bundles the Snell mod
         run: |
           ./gradlew :launcher:jar
           launcher_jar="$(ls launcher/build/libs/launcher-*.jar | head -1)"
-          unzip -l "$launcher_jar" | grep -q 'bundled-mods/maeve.jar' \
-            || { echo "::error::$launcher_jar is missing bundled-mods/maeve.jar"; exit 1; }
+          unzip -l "$launcher_jar" | grep -q 'bundled-mods/snell.jar' \
+            || { echo "::error::$launcher_jar is missing bundled-mods/snell.jar"; exit 1; }
           mod_jar="$(ls mod/build/libs/mod-*.jar | head -1)"
           unzip -l "$mod_jar" | grep -Eq 'META-INF/jars/shared-.*\.jar' \
             || { echo "::error::$mod_jar is missing JiJ-nested shared"; exit 1; }
-          echo "Bundle OK: launcher embeds maeve.jar; mod nests shared"
+          echo "Bundle OK: launcher embeds snell.jar; mod nests shared"
 
   license-check:
     runs-on: ubuntu-latest
@@ -70,6 +70,6 @@ jobs:
       - name: Upload UI previews
         uses: actions/upload-artifact@v4
         with:
-          name: maeve-ui-previews
+          name: snell-ui-previews
           path: launcher/build/ui-preview/*.png
           if-no-files-found: error

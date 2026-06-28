@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "gg.snell.mod.mixin",
+  "client": ["MinecraftClickMixin"],
+  "injectors": { "defaultRequire": 1 },
+  "comment": "Client mixins start empty. The MVP HUD uses the Fabric HUD render callback (no mixin). The cosmetics player-renderer mixin is added in Phase 3; see gg.snell.mod.cosmetics.CosmeticsRenderer."
+}

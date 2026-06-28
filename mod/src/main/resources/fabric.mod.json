@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "id": "maeve",
+  "id": "snell",
   "version": "${version}",
-  "name": "Maeve",
+  "name": "Snell",
   "description": "Server-legal performance + quality-of-life client: HUD, mod menu, cosmetics.",
-  "authors": ["Maeve"],
+  "authors": ["Snell"],
   "contact": {
-    "homepage": "https://github.com/Bihzeh/maeve",
-    "sources": "https://github.com/Bihzeh/maeve",
-    "issues": "https://github.com/Bihzeh/maeve/issues"
+    "homepage": "https://github.com/Bihzeh/snell",
+    "sources": "https://github.com/Bihzeh/snell",
+    "issues": "https://github.com/Bihzeh/snell/issues"
   },
-  "license": "LicenseRef-Maeve-Proprietary",
+  "license": "LicenseRef-Snell-Proprietary",
   "environment": "client",
   "entrypoints": {
     "client": [
-      { "adapter": "kotlin", "value": "gg.maeve.mod.MaeveMod" }
+      { "adapter": "kotlin", "value": "gg.snell.mod.SnellMod" }
     ]
   },
   "mixins": [
-    { "config": "maeve.mixins.json", "environment": "client" }
+    { "config": "snell.mixins.json", "environment": "client" }
   ],
   "depends": {
     "fabricloader": ">=${loader}",

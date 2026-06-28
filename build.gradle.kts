@@ -6,7 +6,7 @@ tasks.register("printVersions") {
     description = "Prints the pinned tool versions from the version catalog."
     doLast {
         val libs = the<org.gradle.api.artifacts.VersionCatalogsExtension>().named("libs")
-        println("Maeve pinned versions:")
+        println("Snell pinned versions:")
         listOf(
             "minecraft", "fabric-loader", "fabric-api", "loom",
             "kotlin", "compose-multiplatform", "ktor"

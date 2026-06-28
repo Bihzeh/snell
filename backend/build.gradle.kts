@@ -1,11 +1,11 @@
 plugins {
-    id("maeve.kotlin-common")
+    id("snell.kotlin-common")
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
 }
 
 application {
-    mainClass.set("gg.maeve.backend.ApplicationKt")
+    mainClass.set("gg.snell.backend.ApplicationKt")
 }
 
 dependencies {

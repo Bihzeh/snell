@@ -1,4 +1,4 @@
-# Maeve Mod — Spec & Handoff
+# Snell Mod — Spec & Handoff
 
 Status of the Fabric client mod (`mod/`) and the plan for the rest. Target: **Minecraft
 26.2**, Fabric, Mojang mappings (unobfuscated), JDK 25. Companion to ADR-0001/0002/0007/0009
@@ -16,15 +16,15 @@ and the architecture spec.
   mode, Blaze3D-safe); keybind via `KeyMappingHelper.registerKeyMapping` + `ClientTickEvents`;
   menu via `Minecraft.setScreenAndShow`; state from `getFps()` / `player.position()` /
   `options.keyUp/keyDown/keyLeft/keyRight`.
-- **Mod menu** — `platform/MaeveMenuScreen.kt` (keyboard: Up/Down/Enter/Esc) + pure
+- **Mod menu** — `platform/SnellMenuScreen.kt` (keyboard: Up/Down/Enter/Esc) + pure
   `ui/ModMenuController.kt`. Opened by Right-Shift.
 - **Config** — `config/Config.kt`: per-module JSON (`enabled`, `x`, `y`) under
-  `.minecraft/config/maeve/`, schema-versioned, kotlinx.serialization.
+  `.minecraft/config/snell/`, schema-versioned, kotlinx.serialization.
 - **Cosmetics (Phase 3 stubs)** — `cosmetics/CosmeticsClient.kt` (interface +
   `LocalStubCosmeticsClient`), `cosmetics/CosmeticsRenderer.kt` (the mixin integration point).
-- **Entry** — `MaeveMod.kt` (`ClientModInitializer`): wires config → modules → HUD → menu.
-- **Resources** — `fabric.mod.json`, `maeve.mixins.json` (empty client list for now),
-  `assets/maeve/lang/en_us.json`.
+- **Entry** — `SnellMod.kt` (`ClientModInitializer`): wires config → modules → HUD → menu.
+- **Resources** — `fabric.mod.json`, `snell.mixins.json` (empty client list for now),
+  `assets/snell/lang/en_us.json`.
 - **Tests** — `HudAndConfigTest.kt` (HUD render logic + config round-trip).
 
 **Caveat:** in-game *visual* render is unconfirmed (build box is headless). It compiles
@@ -43,7 +43,7 @@ launch log — visual confirmation is a desktop step.
 1. Implement `HudModule` (`id`, `displayName`, `var enabled`, `var x/y`, `render(ctx): List<HudLine>`).
 2. If it needs new game data, add a field to `GameContext` and populate it in
    `FabricMinecraftBridge.capture()`.
-3. Register it in `MaeveMod.onInitializeClient()`. Config persistence + menu listing are automatic.
+3. Register it in `SnellMod.onInitializeClient()`. Config persistence + menu listing are automatic.
 
 ## Module backlog (Phase 2) — with server-legal compliance
 Bar = a published allowed-mods policy (Hypixel "Allowed Modifications"). Forbidden everywhere:
@@ -61,18 +61,18 @@ reach, kill aura, auto-clicker, X-ray, hitbox extenders, anti-knockback.
 
 ## Larger pieces
 - **HUD editor (Phase 2):** a draggable `Screen` that moves each `HudModule`'s x/y (persisted
-  via Config). New `MaeveHudEditorScreen` + drag handling in the bridge.
+  via Config). New `SnellHudEditorScreen` + drag handling in the bridge.
 - **Cosmetics render (Phase 3):** a Mixin into the player renderer calling
   `CosmeticsRenderer.renderFor(uuid, client)`, drawing equipped cosmetics via Blaze3D. Data from
   `HttpCosmeticsClient` (backend-mediated UUID lookup, NOT in-game packets; non-users → vanilla).
-  See ADR-0007. Register the mixin in `maeve.mixins.json`.
+  See ADR-0007. Register the mixin in `snell.mixins.json`.
 
 ## Build / run
 - `./gradlew :mod:build` → `mod/build/libs/mod-<v>.jar`.
 - Launcher injects it into the game profile. The launcher distribution **bundles the mod**
-  (`launcher/build.gradle.kts` `copyBundledModJar` → classpath resource `bundled-mods/maeve.jar`);
+  (`launcher/build.gradle.kts` `copyBundledModJar` → classpath resource `bundled-mods/snell.jar`);
   at runtime `ModProvisioner` extracts it into the instance's `mods/`. Both the public and
-  dev (`-Pmaeve.dev=true`) workflows embed and install the mod identically — decoupled from
+  dev (`-Psnell.dev=true`) workflows embed and install the mod identically — decoupled from
   `BuildInfo.isDev`. A freshly built `mod/build/libs` jar is only preferred when the launcher
   is run from the repo (`./gradlew :launcher:run`).
-- `./gradlew :launcher:provisionTest` launches headless and confirms Fabric loads `maeve`.
+- `./gradlew :launcher:provisionTest` launches headless and confirms Fabric loads `snell`.

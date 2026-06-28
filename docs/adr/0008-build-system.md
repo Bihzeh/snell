@@ -10,7 +10,7 @@ day one. Fabric tooling (Loom) is Gradle-based.
 ## Decision
 A single **Gradle multi-project** build. Versions are centralized in
 `gradle/libs.versions.toml`. Shared build config lives in `build-logic/`
-convention plugins (e.g. `maeve.kotlin-common`). The mod uses the 26.1 no-remap
+convention plugins (e.g. `snell.kotlin-common`). The mod uses the 26.1 no-remap
 `net.fabricmc.fabric-loom` plugin.
 
 ## Consequences

@@ -1,5 +1,5 @@
 plugins {
-    id("maeve.kotlin-common")
+    id("snell.kotlin-common")
     alias(libs.plugins.kotlin.serialization)
 }
 

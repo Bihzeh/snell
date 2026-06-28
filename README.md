@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/brand/logo.png" alt="Maeve" width="380">
+  <img src="docs/brand/logo.png" alt="Snell" width="380">
 </p>
 
 A legitimate, **server-legal** performance + quality-of-life Minecraft client — FPS boost, bundled QoL mods, an in-game HUD/mod menu, cross-user cosmetics, friends/parties, and a custom launcher with Microsoft auth and multi-version support.
@@ -41,4 +41,4 @@ Requires **JDK 25** and Gradle 9.6.0 (use the wrapper once generated: `gradle wr
 
 ## License
 
-Maeve's own code: see [`LICENSE`](LICENSE). Bundled third-party mods retain their own licenses — see [`LICENSES/`](LICENSES/).
+Snell's own code: see [`LICENSE`](LICENSE). Bundled third-party mods retain their own licenses — see [`LICENSES/`](LICENSES/).

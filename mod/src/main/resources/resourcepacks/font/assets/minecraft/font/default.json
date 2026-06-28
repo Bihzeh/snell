@@ -3,7 +3,7 @@
     { "type": "reference", "id": "minecraft:include/space" },
     {
       "type": "ttf",
-      "file": "maeve:poppins.ttf",
+      "file": "snell:poppins.ttf",
       "size": 11.0,
       "oversample": 2.0,
       "shift": [0.0, 0.0],
