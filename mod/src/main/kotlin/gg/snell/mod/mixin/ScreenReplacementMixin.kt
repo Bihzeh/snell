@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 @Mixin(Minecraft::class)
 class ScreenReplacementMixin {
 
-    @Inject(method = ["setScreen"], at = [At("HEAD")], cancellable = true)
+    @Inject(method = ["setScreenAndShow"], at = [At("HEAD")], cancellable = true)
     private fun snell_replaceScreen(screen: Screen?, ci: CallbackInfo) {
         if (!SnellMenus.enabled || screen == null) return
         val replacement: Screen = when (screen) {
