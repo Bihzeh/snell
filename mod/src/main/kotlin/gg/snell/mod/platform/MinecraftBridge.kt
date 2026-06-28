@@ -20,6 +20,9 @@ interface MinecraftBridge {
     /** Open the in-game HUD editor (drag/show-hide/style) for the given modules. */
     fun openHudEditor(modules: ModuleManager)
 
+    /** Replace vanilla menus with the bespoke Snell screens while [enabled] returns true. */
+    fun installMenuOverhaul(enabled: () -> Boolean)
+
     /** Register the bundled Geist font resource pack as an available (not-yet-applied) pack. */
     fun registerFontPack()
 

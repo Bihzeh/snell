@@ -1,9 +1,12 @@
 package gg.snell.mod.platform
 
 import gg.snell.mod.module.ModuleManager
+import gg.snell.mod.platform.screens.SnellPauseScreen
+import gg.snell.mod.platform.screens.SnellTitleScreen
 import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
@@ -13,6 +16,8 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.screens.PauseScreen
+import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.resources.Identifier
@@ -58,6 +63,22 @@ class FabricMinecraftBridge : MinecraftBridge {
 
     override fun openHudEditor(modules: ModuleManager) {
         Minecraft.getInstance().setScreenAndShow(SnellHudEditorScreen(modules, ::sampleContext))
+    }
+
+    override fun installMenuOverhaul(enabled: () -> Boolean) {
+        // Fire whenever any screen finishes initializing and, if it's a vanilla menu we re-skin,
+        // replace it with the Snell version. Our screens don't extend the vanilla types, so the
+        // replacement's own init never re-triggers a swap.
+        ScreenEvents.AFTER_INIT.register(
+            ScreenEvents.AfterInit { client, screen, _, _ ->
+                if (!enabled()) return@AfterInit
+                when (screen) {
+                    is TitleScreen -> client.setScreenAndShow(SnellTitleScreen())
+                    is PauseScreen -> client.setScreenAndShow(SnellPauseScreen())
+                    else -> {}
+                }
+            },
+        )
     }
 
     private fun capture(mc: Minecraft): GameContext {

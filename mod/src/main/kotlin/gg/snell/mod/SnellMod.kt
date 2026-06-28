@@ -51,6 +51,9 @@ class SnellMod : ClientModInitializer {
         // Right-Shift opens the HUD editor directly (its "Modules" button browses/toggles everything).
         bridge.installMenuKeybind { bridge.openHudEditor(modules) }
 
+        // Swap vanilla title/pause (and, later, the pickers) for the bespoke Snell screens.
+        bridge.installMenuOverhaul { gg.snell.mod.platform.SnellMenus.enabled }
+
         // Apply the persisted font choice after the first client tick (never reload during init).
         bridge.applyCustomFontOnStartup(modules.byId("font")?.enabled ?: true)
 
