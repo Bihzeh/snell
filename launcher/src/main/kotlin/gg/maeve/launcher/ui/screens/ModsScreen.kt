@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,7 @@ import gg.maeve.launcher.ui.theme.Maeve
 
 @Composable
 fun ModsScreen(vm: LauncherViewModel) {
+    LaunchedEffect(Unit) { vm.loadModIcons() }
     Column(Modifier.fillMaxSize()) {
         ScreenHeader("Mods & Performance")
         Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -40,12 +42,14 @@ fun ModsScreen(vm: LauncherViewModel) {
                 icon = "bolt", name = "Sodium", meta = "Rendering",
                 description = "Rewrites Minecraft's renderer for big FPS gains and smoother frame pacing.",
                 statusLabel = "Active", statusKind = PillKind.Online,
+                logo = vm.modIcons["sodium"],
                 enabled = vm.mods["sodium"] ?: true, onToggle = { vm.mods["sodium"] = it },
             )
             ModRow(
                 icon = "speed", name = "Lithium", meta = "Server tick",
                 description = "Optimizes physics, mob AI and tick scheduling — identical behavior, less CPU.",
                 statusLabel = "Active", statusKind = PillKind.Online,
+                logo = vm.modIcons["lithium"],
                 enabled = vm.mods["lithium"] ?: true, onToggle = { vm.mods["lithium"] = it },
             )
             Spacer(Modifier.height(2.dp))

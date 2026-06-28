@@ -2,6 +2,7 @@ package gg.maeve.launcher.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -35,6 +37,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -228,6 +232,7 @@ fun ModRow(
     statusKind: PillKind,
     enabled: Boolean,
     onToggle: ((Boolean) -> Unit)?,
+    logo: ImageBitmap? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -237,9 +242,12 @@ fun ModRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(Maeve.accent.copy(alpha = 0.14f)),
+            Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(if (logo == null) Maeve.accent.copy(alpha = 0.14f) else Maeve.s2),
             contentAlignment = Alignment.Center,
-        ) { SymIcon(icon, 24.dp, Maeve.accent) }
+        ) {
+            if (logo != null) Image(bitmap = logo, contentDescription = name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            else SymIcon(icon, 24.dp, Maeve.accent)
+        }
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

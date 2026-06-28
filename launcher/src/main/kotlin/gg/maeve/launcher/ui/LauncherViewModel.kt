@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import gg.maeve.launcher.auth.AuthConfig
 import gg.maeve.launcher.auth.DeviceCodePrompt
 import gg.maeve.launcher.auth.FileTokenStore
@@ -13,6 +15,8 @@ import gg.maeve.launcher.auth.MsaDeviceCodeAuth
 import gg.maeve.launcher.game.GameSession
 import gg.maeve.launcher.game.Launcher
 import gg.maeve.launcher.game.MaevePaths
+import gg.maeve.launcher.game.ModIcons
+import gg.maeve.launcher.game.Net
 import gg.maeve.launcher.game.findDevModJar
 import gg.maeve.launcher.update.BuildInfo
 import gg.maeve.launcher.update.UpdateService
@@ -52,6 +56,8 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     // settings + mods
     var maxMemoryMb by mutableStateOf(2048)
     val mods = mutableStateMapOf("sodium" to true, "lithium" to true)
+    val modIcons = mutableStateMapOf<String, ImageBitmap>()
+    private var iconsRequested = false
     // launcher behavior (UI state; disk persistence is a tracked follow-up)
     var closeOnLaunch by mutableStateOf(true)
     var autoUpdate by mutableStateOf(true)
@@ -126,6 +132,23 @@ class LauncherViewModel(private val scope: CoroutineScope) {
     fun cancelSignIn() {
         signInJob?.cancel(); signInJob = null
         prompt = null; signInBusy = false; signInError = null
+    }
+
+/** Lazily fetch + cache the bundled mods' Modrinth logos, decode them to bitmaps. */
+    fun loadModIcons() {
+        if (iconsRequested) return
+        iconsRequested = true
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                Net().use { net ->
+                    val raw = ModIcons.load(listOf("sodium", "lithium"), MaevePaths.default().root, net)
+                    val decoded = raw.mapNotNull { (slug, bytes) ->
+                        runCatching { slug to org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap() }.getOrNull()
+                    }.toMap()
+                    ui { modIcons.putAll(decoded) }
+                }
+            }
+        }
     }
 
     fun play() {
