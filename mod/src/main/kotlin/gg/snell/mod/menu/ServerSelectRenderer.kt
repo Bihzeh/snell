@@ -35,13 +35,13 @@ object ServerSelectRenderer {
         canvas.fill(p.left + 1, p.top + 1, p.width - 2, list.top - (p.top + 1), SnellPalette.menuPanel)
         val back = ServerSelectLayout.backButton(w, h)
         SnellUi.squareButton(canvas, back, back.contains(mouseX, mouseY))
-        SnellUi.chevronLeft(canvas, back.left + back.width / 2, back.top + back.height / 2, 3, SnellPalette.text)
+        SnellUi.icon(canvas, "back", back.left + back.width / 2, back.top + back.height / 2, 12, SnellPalette.text)
         val titleX = back.right + 9
         canvas.drawText(titleX, p.top + 6, "Multiplayer", SnellPalette.text)
         canvas.drawText(titleX, p.top + 6 + canvas.lineHeight + 1, "${rows.size} ${if (rows.size == 1) "server" else "servers"}", SnellPalette.menuText3)
         val refresh = ServerSelectLayout.refreshButton(w, h)
         SnellUi.squareButton(canvas, refresh, refresh.contains(mouseX, mouseY))
-        canvas.border(refresh.left + 6, refresh.top + 5, refresh.width - 12, refresh.height - 10, SnellPalette.text2)
+        SnellUi.icon(canvas, "refresh", refresh.left + refresh.width / 2, refresh.top + refresh.height / 2, 12, SnellPalette.text2)
         SnellUi.divider(canvas, p.left + 1, p.top + ServerSelectLayout.HEADER_H, p.width - 2)
 
         // footer band
@@ -52,7 +52,8 @@ object ServerSelectRenderer {
             val style = when (c.id) { "join" -> SnellBtn.Primary; "cancel" -> SnellBtn.Ghost; else -> SnellBtn.Secondary }
             val enabled = if (c.id == "join") hasSel else true
             val label = when (c.id) { "join" -> "Join"; "add" -> "Add Server"; "direct" -> "Direct Connect"; else -> "Cancel" }
-            SnellUi.button(canvas, c.rect, label, style, hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled)
+            val ic = when (c.id) { "join" -> "play"; "add" -> "add"; "direct" -> "link"; else -> null }
+            SnellUi.button(canvas, c.rect, label, style, hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled, iconName = ic)
         }
     }
 

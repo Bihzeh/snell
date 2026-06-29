@@ -37,7 +37,7 @@ object WorldSelectRenderer {
         canvas.fill(p.left + 1, p.top + 1, p.width - 2, list.top - (p.top + 1), SnellPalette.menuPanel)
         val back = WorldSelectLayout.backButton(w, h)
         SnellUi.squareButton(canvas, back, back.contains(mouseX, mouseY))
-        SnellUi.chevronLeft(canvas, back.left + back.width / 2, back.top + back.height / 2, 3, SnellPalette.text)
+        SnellUi.icon(canvas, "back", back.left + back.width / 2, back.top + back.height / 2, 12, SnellPalette.text)
         val titleX = back.right + 9
         canvas.drawText(titleX, p.top + 6, "Singleplayer", SnellPalette.text)
         canvas.drawText(titleX, p.top + 6 + canvas.lineHeight + 1, "${rows.size} ${if (rows.size == 1) "world" else "worlds"}", SnellPalette.menuText3)
@@ -52,7 +52,8 @@ object WorldSelectRenderer {
             val style = when (c.id) { "play" -> SnellBtn.Primary; "delete" -> SnellBtn.Danger; "cancel" -> SnellBtn.Ghost; else -> SnellBtn.Secondary }
             val enabled = when (c.id) { "play", "edit", "delete" -> hasSel; else -> true }
             val label = when (c.id) { "play" -> "Play"; "create" -> "Create New"; "edit" -> "Edit"; "delete" -> "Delete"; else -> "Cancel" }
-            SnellUi.button(canvas, c.rect, label, style, hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled)
+            val ic = when (c.id) { "play" -> "play"; "create" -> "create"; "edit" -> "edit"; "delete" -> "delete"; else -> null }
+            SnellUi.button(canvas, c.rect, label, style, hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled, iconName = ic)
         }
     }
 
@@ -67,7 +68,7 @@ object WorldSelectRenderer {
         SnellUi.round(canvas, icon, SnellPalette.menuPanel)
 
         val tx = icon.right + 8
-        if (selected) SnellUi.checkGlyph(canvas, r.right - 14, r.top + r.height / 2 - 2, 4, SnellPalette.accent)
+        if (selected) SnellUi.icon(canvas, "check", r.right - 12, r.top + r.height / 2, 11, SnellPalette.accent)
         val nameMaxW = (r.width * 0.42f).toInt()
         val name = SnellUi.ellipsize(canvas, world.name, nameMaxW)
         canvas.drawText(tx, r.top + 5, name, SnellPalette.text)

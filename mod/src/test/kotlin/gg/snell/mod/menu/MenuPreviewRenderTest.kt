@@ -48,6 +48,22 @@ class MenuPreviewRenderTest {
         override fun textWidth(text: String) = g.fontMetrics.stringWidth(text)
         override val lineHeight: Int get() = g.fontMetrics.height - 2
         override fun overlayStratum() {}
+
+        private val iconFont: Font? = javaClass.classLoader.getResourceAsStream("assets/snell/font/tabler-snell.ttf")
+            ?.use { Font.createFont(Font.TRUETYPE_FONT, it).deriveFont(10f) }
+
+        override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {
+            val f = iconFont ?: return
+            val saved = g.font; g.font = f; g.color = col(color)
+            g.drawString(glyph.toString(), x.toFloat(), y.toFloat() + g.fontMetrics.ascent)
+            g.font = saved
+        }
+
+        override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {
+            val res = "assets/" + id.replace(":", "/")
+            val img = javaClass.classLoader.getResourceAsStream(res)?.use { ImageIO.read(it) } ?: return
+            g.drawImage(img, x, y, w, h, null)
+        }
     }
 
     private fun frame(w: Int, h: Int): Pair<BufferedImage, AwtCanvas> {

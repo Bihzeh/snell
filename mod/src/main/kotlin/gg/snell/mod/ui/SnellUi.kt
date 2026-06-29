@@ -111,12 +111,44 @@ object SnellUi {
     fun dot(canvas: EditorCanvas, cx: Int, cy: Int, d: Int, color: Int) =
         canvas.fill(cx - d / 2, cy - d / 2, d, d, color)
 
+    // ---- Tabler icons (bundled subset, drawn from the always-on `snell:icons` font) ------------
+    private const val ICON_BASE = 10f // matches the icons.json font size
+    private val ICONS: Map<String, Char> = mapOf(
+        "discord" to '', "singleplayer" to '', "multiplayer" to '', "options" to '',
+        "quit" to '', "wallet" to '', "cosmetics" to '', "friends" to '',
+        "back" to '', "chevron" to '', "cycle" to '', "search" to '',
+        "play" to '', "create" to '', "add" to '', "edit" to '',
+        "delete" to '', "refresh" to '', "done" to '', "check" to '',
+        "controls" to '', "audio" to '', "mods" to '', "video" to '',
+        "quickswitch" to '', "advancements" to '', "statistics" to '', "lan" to '裡',
+        "link" to '', "rewards" to '', "people" to '',
+    )
+
+    /** Draw a Tabler [name] icon centred at ([cx],[cy]), [size] px tall, tinted [color]. Unknown name = nothing. */
+    fun icon(canvas: EditorCanvas, name: String, cx: Int, cy: Int, size: Int, color: Int) {
+        val ch = ICONS[name] ?: return
+        val x = cx - size / 2; val y = cy - size / 2
+        canvas.withScale(size / ICON_BASE, x, y) { canvas.drawIcon(ch, 0, 0, color) }
+    }
+
+    /** Draw the Snell slipstream brand mark texture into a [size]×[size] box at ([x],[y]). */
+    fun logo(canvas: EditorCanvas, x: Int, y: Int, size: Int) =
+        canvas.drawTexture("snell:textures/gui/snell_mark.png", x, y, size, size)
+
     // ---- surfaces -----------------------------------------------------------------------------
 
-    /** Opaque full-screen menu backdrop (dark base + a faint top sheen). */
+    /**
+     * Full-screen menu backdrop: a dusk atmosphere. The design sits the menu over a blurred dusk
+     * world; we can't blur the live panorama from the 2D extractor, so we evoke it — indigo sky →
+     * mauve horizon glow → dark base, with a cyan top sheen and a bottom vignette so the cards read.
+     */
     fun backdrop(canvas: EditorCanvas, w: Int, h: Int) {
-        canvas.fill(0, 0, w, h, SnellPalette.menuBase)
-        canvas.gradientV(0, 0, w, h * 2 / 3, SnellPalette.withAlpha(SnellPalette.accent, 0x12), SnellPalette.withAlpha(SnellPalette.accent, 0))
+        val horizon = (h * 0.56f).toInt()
+        canvas.gradientV(0, 0, w, horizon, 0xFF161229.toInt(), 0xFF3B2A47.toInt())
+        canvas.gradientV(0, horizon, w, h - horizon, 0xFF3B2A47.toInt(), SnellPalette.menuBase)
+        canvas.gradientV(0, (h * 0.40f).toInt(), w, (h * 0.22f).toInt(), SnellPalette.withAlpha(0xFFE7A6C8.toInt(), 0), SnellPalette.withAlpha(0xFFE7A6C8.toInt(), 0x30))
+        canvas.gradientV(0, 0, w, h / 3, SnellPalette.withAlpha(SnellPalette.accent, 0x14), SnellPalette.withAlpha(SnellPalette.accent, 0))
+        canvas.gradientV(0, (h * 0.60f).toInt(), w, h - (h * 0.60f).toInt(), SnellPalette.withAlpha(SnellPalette.menuBase, 0), SnellPalette.withAlpha(SnellPalette.menuBase, 0xCC))
     }
 
     /** Translucent dim over the live world/HUD, for menus opened in-game (pause, popups). */
@@ -142,8 +174,8 @@ object SnellUi {
 
     // ---- buttons / controls -------------------------------------------------------------------
 
-    /** A button in one of four [SnellBtn] styles, with hover + disabled states. */
-    fun button(canvas: EditorCanvas, r: Rect, text: String, style: SnellBtn = SnellBtn.Secondary, hover: Boolean = false, enabled: Boolean = true) {
+    /** A button in one of four [SnellBtn] styles, with hover + disabled states + an optional leading icon. */
+    fun button(canvas: EditorCanvas, r: Rect, text: String, style: SnellBtn = SnellBtn.Secondary, hover: Boolean = false, enabled: Boolean = true, iconName: String? = null) {
         val fg: Int
         when (style) {
             SnellBtn.Primary -> {
@@ -170,8 +202,16 @@ object SnellUi {
             }
         }
         round(canvas, r, SnellPalette.menuPanel)
-        val tw = canvas.textWidth(text)
-        canvas.drawText(r.left + (r.width - tw) / 2, r.top + (r.height - canvas.lineHeight) / 2 + 1, text, fg)
+        val ty = r.top + (r.height - canvas.lineHeight) / 2 + 1
+        if (iconName != null) {
+            val isz = (r.height - 10).coerceIn(9, 14)
+            val total = isz + 6 + canvas.textWidth(text)
+            val sx = r.left + (r.width - total) / 2
+            icon(canvas, iconName, sx + isz / 2, r.top + r.height / 2, isz, fg)
+            canvas.drawText(sx + isz + 6, ty, text, fg)
+        } else {
+            canvas.drawText(r.left + (r.width - canvas.textWidth(text)) / 2, ty, text, fg)
+        }
     }
 
     /** Square icon button chrome (back / refresh / close); caller draws the glyph centred. */

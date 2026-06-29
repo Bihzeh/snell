@@ -53,7 +53,7 @@ interface HudCanvas {
     val screenHeight: Int
 }
 
-/** Adds the overlay primitives the HUD editor needs on top of [HudCanvas]. */
+/** Adds the overlay primitives the HUD editor + bespoke menus need on top of [HudCanvas]. */
 interface EditorCanvas : HudCanvas {
     /** Draw a 1px rectangle outline. */
     fun border(x: Int, y: Int, w: Int, h: Int, color: Int)
@@ -61,4 +61,8 @@ interface EditorCanvas : HudCanvas {
     fun gradientV(x: Int, y: Int, w: Int, h: Int, top: Int, bottom: Int)
     /** Raise the draw z-layer so editor overlays sit above the HUD preview. */
     fun overlayStratum()
+    /** Draw a single icon glyph (Tabler, from the always-on `snell:icons` font) at top-left ([x],[y]), tinted [color]. */
+    fun drawIcon(glyph: Char, x: Int, y: Int, color: Int)
+    /** Blit a full texture (namespaced id, e.g. "snell:textures/gui/snell_mark.png") into the box ([x],[y],[w],[h]). */
+    fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int)
 }

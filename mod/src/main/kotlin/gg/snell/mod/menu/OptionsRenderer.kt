@@ -41,10 +41,10 @@ object OptionsRenderer {
         // header
         val back = OptionsLayout.backButton(w, h)
         SnellUi.squareButton(canvas, back, back.contains(mouseX, mouseY))
-        SnellUi.chevronLeft(canvas, back.left + back.width / 2, back.top + back.height / 2, 3, SnellPalette.text)
+        SnellUi.icon(canvas, "back", back.left + back.width / 2, back.top + back.height / 2, 12, SnellPalette.text)
         canvas.drawText(back.right + 9, p.top + (OptionsLayout.HEADER_H - canvas.lineHeight) / 2, "Options", SnellPalette.text)
         val done = OptionsLayout.doneButton(w, h)
-        SnellUi.button(canvas, done.rect, "Done", SnellBtn.Primary, done.rect.contains(mouseX, mouseY))
+        SnellUi.button(canvas, done.rect, "Done", SnellBtn.Primary, done.rect.contains(mouseX, mouseY), iconName = "check")
         SnellUi.divider(canvas, p.left + 1, p.top + OptionsLayout.HEADER_H, p.width - 2)
 
         // rail
@@ -54,7 +54,9 @@ object OptionsRenderer {
         for (c in OptionsLayout.railItems(w, h)) {
             val active = c.id == activeCategory
             SnellUi.categoryItem(canvas, c.rect, active, c.rect.contains(mouseX, mouseY))
-            canvas.drawText(c.rect.left + 10, c.rect.top + (c.rect.height - canvas.lineHeight) / 2, categoryLabels[c.id] ?: c.id, if (active) SnellPalette.text else SnellPalette.text2)
+            val col = if (active) SnellPalette.text else SnellPalette.text2
+            SnellUi.icon(canvas, c.id, c.rect.left + 13, c.rect.top + c.rect.height / 2, 13, col)
+            canvas.drawText(c.rect.left + 24, c.rect.top + (c.rect.height - canvas.lineHeight) / 2, categoryLabels[c.id] ?: c.id, col)
         }
     }
 
@@ -79,7 +81,7 @@ object OptionsRenderer {
                 val bh = 16
                 val r = Rect(ctrl.left, ctrl.top + (ctrl.height - bh) / 2, ctrl.width, bh)
                 SnellUi.button(canvas, r, SnellUi.ellipsize(canvas, item.valueText, ctrl.width - 16), SnellBtn.Secondary, hover)
-                SnellUi.chevronDown(canvas, r.right - 8, r.top + r.height / 2, 2, SnellPalette.menuText3)
+                SnellUi.icon(canvas, "cycle", r.right - 8, r.top + r.height / 2, 9, SnellPalette.menuText3)
             }
             OptionKind.Slider -> SnellUi.slider(canvas, Rect(ctrl.left, ctrl.top, ctrl.width, ctrl.height), item.fraction, item.valueText)
         }

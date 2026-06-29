@@ -1,0 +1,5 @@
+{
+  "providers": [
+    { "type": "ttf", "file": "snell:tabler-snell.ttf", "size": 10.0, "oversample": 4.0, "shift": [0.0, 0.0] }
+  ]
+}

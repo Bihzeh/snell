@@ -1,6 +1,5 @@
 package gg.snell.mod.menu
 
-import gg.snell.mod.editor.LogoArt
 import gg.snell.mod.editor.Rect
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.ui.SnellBtn
@@ -8,9 +7,10 @@ import gg.snell.mod.ui.SnellUi
 import gg.snell.shared.SnellPalette
 
 /**
- * Pure renderer for the bespoke title screen (design: "Snell In-Game Menus") — a left command column
- * (brand lockup, Discord/Singleplayer/Multiplayer nav rows, Options/Quit), top-right quick actions +
- * account chip, and a bottom-right "What's new" card. Every pixel goes through [EditorCanvas].
+ * Pure renderer for the bespoke title screen (design: "Snell In-Game Menus") — dusk backdrop, the
+ * Snell slipstream brand mark + wordmark, a left command column (Discord/Singleplayer/Multiplayer
+ * nav rows, Options/Quit), top-right quick actions + account chip, and a bottom-right "What's new"
+ * card. Icons are real Tabler glyphs; the logo is the slipstream texture.
  */
 object TitleRenderer {
     fun render(
@@ -29,7 +29,7 @@ object TitleRenderer {
             }
             val tileColor = if (c.id == "discord") SnellPalette.discord else SnellPalette.accent
             val tile = SnellUi.navButton(canvas, c.rect, tileColor, title, sub, hover, accent = c.id != "discord")
-            navGlyph(canvas, c.id, tile, tileColor)
+            SnellUi.icon(canvas, c.id, tile.left + tile.width / 2, tile.top + tile.height / 2, tile.width - 5, tileColor)
         }
 
         for (c in TitleLayout.footRow(w, h)) {
@@ -41,14 +41,12 @@ object TitleRenderer {
         for (c in TitleLayout.topActions(w, h)) {
             val hover = c.rect.contains(mouseX, mouseY)
             val r = c.rect
-            when (c.id) {
-                "wallet" -> {
-                    SnellUi.squareButton(canvas, r, hover)
-                    SnellUi.dot(canvas, r.left + 8, r.top + r.height / 2, 5, SnellPalette.gold)
-                    canvas.drawText(r.left + 14, r.top + (r.height - canvas.lineHeight) / 2, crowns, SnellPalette.gold)
-                }
-                "cosmetics" -> { SnellUi.squareButton(canvas, r, hover); SnellUi.plusGlyph(canvas, r.left + r.width / 2, r.top + r.height / 2, 6, SnellPalette.text2) }
-                "friends" -> { SnellUi.squareButton(canvas, r, hover); SnellUi.dot(canvas, r.left + r.width / 2, r.top + r.height / 2, 4, SnellPalette.text2) }
+            SnellUi.squareButton(canvas, r, hover)
+            if (c.id == "wallet") {
+                SnellUi.icon(canvas, "wallet", r.left + 9, r.top + r.height / 2, 11, SnellPalette.gold)
+                canvas.drawText(r.left + 16, r.top + (r.height - canvas.lineHeight) / 2, crowns, SnellPalette.gold)
+            } else {
+                SnellUi.icon(canvas, c.id, r.left + r.width / 2, r.top + r.height / 2, 12, SnellPalette.text2)
             }
         }
         accountChip(canvas, TitleLayout.accountChip(w, h), username, statusLabel)
@@ -57,35 +55,11 @@ object TitleRenderer {
         canvas.drawText(22, h - 13, "SNELL $version  ·  Minecraft 26.2 · Fabric", SnellPalette.menuText3)
     }
 
-    /** The real Snell brand mark (gold-crown gem, via [LogoArt]) beside the scaled SNELL wordmark. */
+    /** The Snell slipstream mark (texture) beside the scaled SNELL wordmark, inline left. */
     private fun lockup(canvas: EditorCanvas, r: Rect) {
         val markSize = r.height
-        val mark = Rect(r.left, r.top, markSize, markSize)
-        for (b in LogoArt.bands(mark)) canvas.fill(b.rect.left, b.rect.top, b.rect.width, b.rect.height, b.color)
-        SnellUi.heading(canvas, mark.right + 9, r.top + 6, "SNELL", 2.0f)
-    }
-
-    /** A clean minimal glyph inside a nav row's icon tile (no SVG primitives in-game). */
-    private fun navGlyph(canvas: EditorCanvas, id: String, tile: Rect, color: Int) {
-        val cx = tile.left + tile.width / 2; val cy = tile.top + tile.height / 2
-        when (id) {
-            "discord" -> { // rounded chat bubble + two eyes
-                val bw = tile.width - 6; val bh = tile.height - 7
-                val b = Rect(tile.left + 3, tile.top + 3, bw, bh)
-                canvas.fill(b.left, b.top, b.width, b.height, color)
-                SnellUi.round(canvas, b, SnellPalette.menuPanel)
-                SnellUi.dot(canvas, cx - 2, cy - 1, 2, SnellPalette.menuPanel); SnellUi.dot(canvas, cx + 2, cy - 1, 2, SnellPalette.menuPanel)
-            }
-            "singleplayer" -> { // a single person: head + shoulders
-                SnellUi.dot(canvas, cx, cy - 3, 4, color)
-                val sh = Rect(cx - 4, cy + 1, 8, 5)
-                canvas.fill(sh.left, sh.top, sh.width, sh.height, color); SnellUi.round(canvas, sh, SnellPalette.menuPanel)
-            }
-            "multiplayer" -> { // a group: three heads
-                SnellUi.dot(canvas, cx - 4, cy + 1, 3, color); SnellUi.dot(canvas, cx + 4, cy + 1, 3, color)
-                SnellUi.dot(canvas, cx, cy - 2, 4, color)
-            }
-        }
+        SnellUi.logo(canvas, r.left, r.top, markSize)
+        SnellUi.heading(canvas, r.left + markSize + 9, r.top + 6, "SNELL", 2.0f)
     }
 
     private fun accountChip(canvas: EditorCanvas, r: Rect, username: String, status: String) {

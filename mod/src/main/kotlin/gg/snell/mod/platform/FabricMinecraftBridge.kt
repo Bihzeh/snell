@@ -219,4 +219,19 @@ internal class EditorExtractorCanvas(
     override fun overlayStratum() {
         extractor.nextStratum()
     }
+
+    override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {
+        val c = Component.literal(glyph.toString()).setStyle(Style.EMPTY.withFont(net.minecraft.network.chat.FontDescription.Resource(ICONS_FONT)))
+        extractor.text(font, c, x, y, color, false) // icons get no drop shadow
+    }
+
+    override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {
+        val p = id.split(":", limit = 2)
+        if (p.size != 2) return
+        extractor.blit(Identifier.fromNamespaceAndPath(p[0], p[1]), x, y, w, h, 0f, 1f, 0f, 1f)
+    }
+
+    private companion object {
+        val ICONS_FONT = Identifier.fromNamespaceAndPath("snell", "icons")
+    }
 }

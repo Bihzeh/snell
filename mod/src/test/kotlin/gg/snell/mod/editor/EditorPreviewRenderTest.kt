@@ -64,6 +64,8 @@ class EditorPreviewRenderTest {
         override fun textWidth(text: String) = g.fontMetrics.stringWidth(text)
         override val lineHeight: Int get() = g.fontMetrics.height - 2
         override fun overlayStratum() {}
+        override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {} // HUD editor preview uses no icons
+        override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {}
     }
 
     private fun ctx() = GameContext(
