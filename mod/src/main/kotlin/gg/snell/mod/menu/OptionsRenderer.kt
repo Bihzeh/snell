@@ -7,113 +7,81 @@ import gg.snell.mod.ui.SnellUi
 import gg.snell.shared.SnellPalette
 
 /**
- * Pure renderer for the bespoke Options screen — backdrop, panel, header, a 2-column grid of
- * option rows (each an inset list-row with a label + right-hand control) and a footer of category
- * buttons + a primary Done button. Launcher look: cyan accents over neutral-dark surfaces.
+ * Pure renderer for the bespoke Options screen (design: "Snell In-Game Menus") — backdrop + card, a
+ * back/title/Done header, a left category rail (Video / Controls / Audio | Mods) and a scrollable
+ * content column of section headers + option rows (label/description on the left, a toggle / cycle /
+ * slider on the right). Rows draw first; header + rail repaint on top to mask overflow.
  */
 object OptionsRenderer {
-    private val categoryLabels = mapOf(
-        "video" to "Video",
-        "sound" to "Sound",
-        "controls" to "Controls",
-        "chat" to "Chat",
-        "accessibility" to "Accessibility",
-    )
+    private val categoryLabels = mapOf("video" to "Video", "controls" to "Controls", "audio" to "Audio", "mods" to "Mods")
 
     fun render(
-        canvas: EditorCanvas,
-        w: Int,
-        h: Int,
-        mouseX: Int,
-        mouseY: Int,
-        items: List<OptionItem>,
-        hoveredIndex: Int,
+        canvas: EditorCanvas, w: Int, h: Int, mouseX: Int, mouseY: Int,
+        entries: List<OptionEntry>, activeCategory: String, scrollY: Int,
     ) {
         SnellUi.backdrop(canvas, w, h)
+        val p = OptionsLayout.panelRect(w, h)
+        SnellUi.panel(canvas, p)
 
-        val panel = OptionsLayout.panelRect(w, h)
-        SnellUi.panel(canvas, panel)
-        SnellUi.header(canvas, panel, OptionsLayout.HEADER_H, "Options")
-
-        for (i in items.indices) {
-            row(canvas, w, h, items[i], hover = i == hoveredIndex, index = i)
+        val content = OptionsLayout.contentRect(w, h)
+        for (i in OptionsLayout.visibleRange(entries.size, scrollY, w, h)) {
+            val rr = OptionsLayout.rowRect(i, scrollY, w, h)
+            if (rr.bottom <= content.top || rr.top >= content.bottom) continue
+            when (val e = entries[i]) {
+                is OptionEntry.Section -> SnellUi.sectionLabel(canvas, rr.left, rr.top + (rr.height - canvas.lineHeight) / 2, e.label)
+                is OptionEntry.Item -> optionRow(canvas, rr, e.item, rr.contains(mouseX, mouseY))
+            }
         }
+        SnellUi.scrollbar(canvas, OptionsLayout.scrollbarX(w, h), content.top, content.height, OptionsLayout.contentHeight(entries.size), scrollY)
 
-        for (c in OptionsLayout.categoryButtons(w, h)) {
-            SnellUi.button(
-                canvas, c.rect, categoryLabels[c.id] ?: c.id,
-                SnellBtn.Secondary, hover = c.rect.contains(mouseX, mouseY),
-            )
-        }
+        // mask overflow above/below the content column, then lay header + rail on top.
+        canvas.fill(content.left, p.top + 1, p.right - 1 - content.left, content.top - (p.top + 1), SnellPalette.menuPanel)
+        canvas.fill(content.left, content.bottom, p.right - 1 - content.left, p.bottom - 1 - content.bottom, SnellPalette.menuPanel)
+
+        // header
+        val back = OptionsLayout.backButton(w, h)
+        SnellUi.squareButton(canvas, back, back.contains(mouseX, mouseY))
+        SnellUi.chevronLeft(canvas, back.left + back.width / 2, back.top + back.height / 2, 3, SnellPalette.text)
+        canvas.drawText(back.right + 9, p.top + (OptionsLayout.HEADER_H - canvas.lineHeight) / 2, "Options", SnellPalette.text)
         val done = OptionsLayout.doneButton(w, h)
-        SnellUi.button(canvas, done.rect, "Done", SnellBtn.Primary, hover = done.rect.contains(mouseX, mouseY))
-    }
+        SnellUi.button(canvas, done.rect, "Done", SnellBtn.Primary, done.rect.contains(mouseX, mouseY))
+        SnellUi.divider(canvas, p.left + 1, p.top + OptionsLayout.HEADER_H, p.width - 2)
 
-    // ---- one option row ------------------------------------------------------------------------
-
-    private fun row(canvas: EditorCanvas, w: Int, h: Int, item: OptionItem, hover: Boolean, index: Int) {
-        val rect = OptionsLayout.itemRect(index, w, h)
-        SnellUi.listRow(canvas, rect, selected = false, hover = hover)
-
-        val ctrl = OptionsLayout.controlRect(index, w, h)
-        val midY = rect.top + (rect.height - canvas.lineHeight) / 2 + 1
-
-        // Label on the left, ellipsized so it never collides with the control.
-        val labelX = rect.left + 8
-        val labelW = (ctrl.left - 6) - labelX
-        canvas.drawText(labelX, midY, SnellUi.ellipsize(canvas, item.label, labelW), SnellPalette.text)
-
-        when (item.kind) {
-            OptionKind.Toggle -> toggle(canvas, ctrl, item.on)
-            OptionKind.Cycle -> cycle(canvas, ctrl, item.valueText, hover)
-            OptionKind.Slider -> slider(canvas, ctrl, item.fraction, item.valueText)
+        // rail
+        val rail = OptionsLayout.railRect(w, h)
+        canvas.fill(rail.left + 1, rail.top, rail.width - 1, rail.height - 1, SnellPalette.withAlpha(SnellUi.WHITE, 0x04))
+        canvas.fill(rail.right, rail.top, 1, rail.height, SnellUi.rowBorder)
+        for (c in OptionsLayout.railItems(w, h)) {
+            val active = c.id == activeCategory
+            SnellUi.categoryItem(canvas, c.rect, active, c.rect.contains(mouseX, mouseY))
+            canvas.drawText(c.rect.left + 10, c.rect.top + (c.rect.height - canvas.lineHeight) / 2, categoryLabels[c.id] ?: c.id, if (active) SnellPalette.text else SnellPalette.text2)
         }
     }
 
-    /** Right-aligned switch within the control area. */
-    private fun toggle(canvas: EditorCanvas, ctrl: Rect, on: Boolean) {
-        val sw = 24
-        val sh = 14
-        val x = ctrl.right - sw
-        val y = ctrl.top + (ctrl.height - sh) / 2
-        SnellUi.switch(canvas, Rect(x, y, sw, sh), on)
-    }
-
-    /** A compact Secondary button showing the current value. */
-    private fun cycle(canvas: EditorCanvas, ctrl: Rect, valueText: String, hover: Boolean) {
-        val bh = 16
-        val y = ctrl.top + (ctrl.height - bh) / 2
-        val r = Rect(ctrl.left, y, ctrl.width, bh)
-        SnellUi.button(canvas, r, SnellUi.ellipsize(canvas, valueText, ctrl.width - 8), SnellBtn.Secondary, hover = hover)
-    }
-
-    /** A neutral track + cyan fill to [fraction] + a 6px knob, with [valueText] right-aligned. */
-    private fun slider(canvas: EditorCanvas, ctrl: Rect, fraction: Float, valueText: String) {
-        val f = fraction.coerceIn(0f, 1f)
-        val vtw = canvas.textWidth(valueText)
-
-        val trackLeft = ctrl.left
-        val trackRight = ctrl.right - vtw - 6
-        val trackW = (trackRight - trackLeft).coerceAtLeast(8)
-        val trackH = 4
-        val trackY = ctrl.top + (ctrl.height - trackH) / 2
-
-        // Track groove.
-        canvas.fill(trackLeft, trackY, trackW, trackH, SnellPalette.s2)
-        canvas.border(trackLeft, trackY, trackW, trackH, SnellPalette.border)
-        // Cyan fill.
-        val fillW = (trackW * f).toInt()
-        if (fillW > 0) canvas.fill(trackLeft, trackY, fillW, trackH, SnellPalette.accent)
-
-        // 6px knob centred on the fill edge.
-        val knob = 6
-        val kx = (trackLeft + fillW - knob / 2).coerceIn(trackLeft, trackRight - knob)
-        val ky = ctrl.top + (ctrl.height - knob) / 2
-        canvas.fill(kx, ky, knob, knob, SnellUi.WHITE)
-        canvas.border(kx, ky, knob, knob, SnellPalette.accentHi)
-
-        // Value, right-aligned.
-        val ty = ctrl.top + (ctrl.height - canvas.lineHeight) / 2 + 1
-        canvas.drawText(ctrl.right - vtw, ty, valueText, SnellPalette.text2)
+    private fun optionRow(canvas: EditorCanvas, rr: Rect, item: OptionItem, hover: Boolean) {
+        SnellUi.listRow(canvas, rr, selected = false, hover = hover)
+        val ctrl = OptionsLayout.controlRect(rr)
+        val labelX = rr.left + 8
+        val labelMaxW = ctrl.left - 6 - labelX
+        val hasDesc = item.description.isNotEmpty()
+        if (hasDesc) {
+            canvas.drawText(labelX, rr.top + 4, SnellUi.ellipsize(canvas, item.label, labelMaxW), SnellPalette.text)
+            canvas.drawText(labelX, rr.top + 4 + canvas.lineHeight + 1, SnellUi.ellipsize(canvas, item.description, labelMaxW), SnellPalette.menuText3)
+        } else {
+            canvas.drawText(labelX, rr.top + (rr.height - canvas.lineHeight) / 2 + 1, SnellUi.ellipsize(canvas, item.label, labelMaxW), SnellPalette.text)
+        }
+        when (item.kind) {
+            OptionKind.Toggle -> {
+                val sw = 24; val sh = 12
+                SnellUi.switch(canvas, Rect(ctrl.right - sw, ctrl.top + (ctrl.height - sh) / 2, sw, sh), item.on)
+            }
+            OptionKind.Cycle -> {
+                val bh = 16
+                val r = Rect(ctrl.left, ctrl.top + (ctrl.height - bh) / 2, ctrl.width, bh)
+                SnellUi.button(canvas, r, SnellUi.ellipsize(canvas, item.valueText, ctrl.width - 16), SnellBtn.Secondary, hover)
+                SnellUi.chevronDown(canvas, r.right - 8, r.top + r.height / 2, 2, SnellPalette.menuText3)
+            }
+            OptionKind.Slider -> SnellUi.slider(canvas, Rect(ctrl.left, ctrl.top, ctrl.width, ctrl.height), item.fraction, item.valueText)
+        }
     }
 }

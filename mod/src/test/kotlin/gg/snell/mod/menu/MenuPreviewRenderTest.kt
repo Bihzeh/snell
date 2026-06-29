@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 
 /**
  * Visual smoke render (not a behavioural assertion): rasterizes each bespoke menu via a Java2D
- * [EditorCanvas] (headless, no GL) so the launcher-matched chrome can be eyeballed without
- * launching the game. Writes PNGs under build/menu-preview/.
+ * [EditorCanvas] (headless, no GL) so the design-matched chrome can be eyeballed without launching
+ * the game. Writes PNGs under build/menu-preview/.
  */
 class MenuPreviewRenderTest {
     private class AwtCanvas(val img: BufferedImage, override val screenWidth: Int, override val screenHeight: Int) : EditorCanvas {
@@ -55,6 +55,13 @@ class MenuPreviewRenderTest {
         return img to AwtCanvas(img, w, h)
     }
 
+    /** A frame with a faux green/brown world behind it, so scrim + panel contrast read in-game. */
+    private fun worldFrame(w: Int, h: Int): Pair<BufferedImage, AwtCanvas> {
+        val (img, canvas) = frame(w, h)
+        canvas.gradientV(0, 0, w, h, 0xFF3A4A2A.toInt(), 0xFF12180C.toInt())
+        return img to canvas
+    }
+
     private fun write(img: BufferedImage, name: String): File {
         val out = File("build/menu-preview").apply { mkdirs() }
         val up = BufferedImage(img.width * 2, img.height * 2, BufferedImage.TYPE_INT_ARGB)
@@ -65,37 +72,28 @@ class MenuPreviewRenderTest {
     @Test fun `render title screen`() {
         val w = 480; val h = 270
         val (img, canvas) = frame(w, h)
-        // hover the Singleplayer (first) button to show the hover state
-        val sp = TitleLayout.buttons(w, h).first().rect
-        TitleRenderer.render(canvas, w, h, sp.left + sp.width / 2, sp.top + sp.height / 2)
+        val sp = TitleLayout.navButtons(w, h).first { it.id == "singleplayer" }.rect
+        TitleRenderer.render(canvas, w, h, sp.left + sp.width / 2, sp.top + sp.height / 2, version = "26.2", username = "SnellQueen", statusLabel = "Online", crowns = "2,450")
         assertTrue(write(img, "01-title.png").length() > 0)
     }
 
     @Test fun `render pause menu`() {
         val w = 480; val h = 270
-        val (img, canvas) = frame(w, h)
-        canvas.gradientV(0, 0, w, h, 0xFF3A4A2A.toInt(), 0xFF12180C.toInt()) // fake world behind the scrim
-        val opt = PauseLayout.buttons(w, h)[1].rect
-        PauseRenderer.render(canvas, w, h, opt.left + opt.width / 2, opt.top + opt.height / 2)
+        val (img, canvas) = worldFrame(w, h)
+        val opt = PauseLayout.controls(w, h).first { it.id == "options" }.rect
+        PauseRenderer.render(canvas, w, h, opt.left + opt.width / 2, opt.top + opt.height / 2, worldName = "Survival World")
         assertTrue(write(img, "02-pause.png").length() > 0)
-    }
-
-    /** A frame with a faux green/brown world behind it, so scrim + panel contrast read in-game. */
-    private fun worldFrame(w: Int, h: Int): Pair<BufferedImage, AwtCanvas> {
-        val (img, canvas) = frame(w, h)
-        canvas.gradientV(0, 0, w, h, 0xFF3A4A2A.toInt(), 0xFF12180C.toInt())
-        return img to canvas
     }
 
     @Test fun `render world picker`() {
         val w = 520; val h = 360
         val (img, canvas) = worldFrame(w, h)
         val rows = listOf(
-            WorldRow("New World", "New World", "Survival · 1.21 · 2 minutes ago"),
-            WorldRow("Hardcore Attempt 4", "Hardcore", "Hardcore · 1.21 · yesterday"),
-            WorldRow("Creative Flat", "flat-1", "Creative · 1.21 · 3 days ago"),
-            WorldRow("SkyBlock", "sb", "Survival · 1.20.4 · last week"),
-            WorldRow("Old Base", "old", "Survival · 1.19 · 2 months ago"),
+            WorldRow("New World", "New World", "Survival", "1.21 · 2 minutes ago", "2.1 GB"),
+            WorldRow("Hardcore Attempt 4", "Hardcore", "Hardcore", "1.21 · yesterday", "880 MB"),
+            WorldRow("Creative Flat", "flat-1", "Creative", "1.21 · 3 days ago", "120 MB"),
+            WorldRow("SkyBlock", "sb", "Survival", "1.20.4 · last week", "640 MB"),
+            WorldRow("Old Base", "old", "Survival", "1.19 · 2 months ago", "1.4 GB"),
         )
         WorldSelectRenderer.render(canvas, w, h, -1, -1, rows, selected = 0, scrollY = 0, search = "", searchFocused = false)
         assertTrue(write(img, "03-world.png").length() > 0)
@@ -105,11 +103,11 @@ class MenuPreviewRenderTest {
         val w = 520; val h = 360
         val (img, canvas) = worldFrame(w, h)
         val rows = listOf(
-            ServerRow("Hypixel", "mc.hypixel.net", "Bedwars · SkyBlock · 30+ minigames", "84231/200000", 23, ServerStatus.Online),
-            ServerRow("CubeCraft", "play.cubecraft.net", "Lucky Islands · EggWars", "12044/55000", 41, ServerStatus.Online),
-            ServerRow("My SMP", "smp.example.net", "Private survival realm", "3/20", 8, ServerStatus.Online),
+            ServerRow("Hypixel", "mc.hypixel.net", "Bedwars · SkyBlock · 30+ minigames", "84231", 23, ServerStatus.Online),
+            ServerRow("CubeCraft", "play.cubecraft.net", "Lucky Islands · EggWars", "12044", 41, ServerStatus.Online),
+            ServerRow("My SMP", "smp.example.net", "Private survival realm", "3", 8, ServerStatus.Online),
             ServerRow("Old Server", "dead.example.net", "Can't connect to server", "", -1, ServerStatus.Offline),
-            ServerRow("Resolving…", "new.example.net", "", "", -1, ServerStatus.Pinging),
+            ServerRow("Resolving", "new.example.net", "", "", -1, ServerStatus.Pinging),
         )
         ServerSelectRenderer.render(canvas, w, h, -1, -1, rows, selected = 0, scrollY = 0)
         assertTrue(write(img, "04-server.png").length() > 0)
@@ -118,17 +116,18 @@ class MenuPreviewRenderTest {
     @Test fun `render options screen`() {
         val w = 520; val h = 360
         val (img, canvas) = frame(w, h)
-        val items = listOf(
-            OptionItem("fov", "FOV", OptionKind.Slider, "70", fraction = 0.5f),
-            OptionItem("gui", "GUI Scale", OptionKind.Cycle, "Auto"),
-            OptionItem("vsync", "VSync", OptionKind.Toggle, "On", on = true),
-            OptionItem("fancy", "Graphics", OptionKind.Cycle, "Fancy"),
-            OptionItem("rd", "Render Distance", OptionKind.Slider, "16 chunks", fraction = 0.5f),
-            OptionItem("bright", "Brightness", OptionKind.Slider, "50%", fraction = 0.5f),
-            OptionItem("clouds", "Clouds", OptionKind.Toggle, "Off", on = false),
-            OptionItem("vol", "Master Volume", OptionKind.Slider, "100%", fraction = 1f),
+        val entries = listOf(
+            OptionEntry.Section("Rendering"),
+            OptionEntry.Item(OptionItem("rd", "Render Distance", OptionKind.Slider, "16 chunks", fraction = 0.45f, description = "Chunks loaded around you")),
+            OptionEntry.Item(OptionItem("gfx", "Graphics", OptionKind.Cycle, "Fancy", description = "Detail and visual quality")),
+            OptionEntry.Item(OptionItem("fps", "Max Framerate", OptionKind.Cycle, "120 fps")),
+            OptionEntry.Item(OptionItem("bright", "Brightness", OptionKind.Slider, "50%", fraction = 0.5f)),
+            OptionEntry.Section("Display"),
+            OptionEntry.Item(OptionItem("fs", "Fullscreen", OptionKind.Toggle, "", on = false, description = "Borderless on this display")),
+            OptionEntry.Item(OptionItem("vsync", "VSync", OptionKind.Toggle, "", on = true)),
+            OptionEntry.Item(OptionItem("smooth", "Smooth Lighting", OptionKind.Toggle, "", on = true)),
         )
-        OptionsRenderer.render(canvas, w, h, -1, -1, items, hoveredIndex = 2)
+        OptionsRenderer.render(canvas, w, h, -1, -1, entries, activeCategory = "video", scrollY = 0)
         assertTrue(write(img, "05-options.png").length() > 0)
     }
 }

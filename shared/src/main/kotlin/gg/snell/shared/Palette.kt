@@ -37,6 +37,18 @@ object SnellPalette {
     val danger: Int = 0xFFF06B6B.toInt()        // error / offline
     val info: Int = 0xFF6FA8FF.toInt()          // info / downloading (blue)
 
+    // --- In-game menu tokens (design: "Snell In-Game Menus") -----------------------------------
+    // Twilight-purple translucent panels over a blurred world + the cyan accent. The mod can't blur
+    // the world, so panels are drawn solid over a dark scrim; white-alpha borders/rows are derived
+    // at the call site via withAlpha(SnellUi.WHITE, …). gold/danger/accent/onAccent above already match.
+    val menuBase: Int = 0xFF05050A.toInt()      // screen base behind the (would-be blurred) world
+    val menuPanel: Int = 0xFF0D0B15.toInt()     // card / panel fill
+    val menuInset: Int = 0xFF15121F.toInt()     // inset control field / category rail
+    val menuText3: Int = 0xFF6E6A88.toInt()     // muted meta text (purpler than the neutral [text3])
+    val accentMid: Int = 0xFF00B4D6.toInt()     // cyan gradient end (accent -> accentMid)
+    val dangerSoft: Int = 0xFFF4928E.toInt()    // danger label on soft danger fills
+    val discord: Int = 0xFF5865F2.toInt()       // Discord brand (title placeholder)
+
     /** [surface] at the given [alpha] (0..255), for translucent HUD background panels. */
     fun surfaceAlpha(alpha: Int): Int = (surface and 0x00FFFFFF) or ((alpha and 0xFF) shl 24)
 

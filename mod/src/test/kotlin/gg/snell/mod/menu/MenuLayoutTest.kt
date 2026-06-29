@@ -5,33 +5,36 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+/** Pure-layout regression for the title + pause screens (no rendering). */
 class MenuLayoutTest {
     private val w = 480
     private val h = 270
 
-    @Test fun `title buttons are centred, ordered and non-overlapping`() {
-        val btns = TitleLayout.buttons(w, h)
-        assertEquals(TitleLayout.IDS, btns.map { it.id })
-        for (b in btns) assertEquals((w - b.rect.width) / 2, b.rect.left, "centred: ${b.id}")
-        for (i in 1 until btns.size) assertTrue(btns[i].rect.top >= btns[i - 1].rect.bottom, "stacked: ${btns[i].id}")
+    @Test fun `title nav + foot carry their ids and stack`() {
+        val nav = TitleLayout.navButtons(w, h)
+        val foot = TitleLayout.footRow(w, h)
+        assertEquals(TitleLayout.NAV_IDS, nav.map { it.id })
+        assertEquals(TitleLayout.FOOT_IDS, foot.map { it.id })
+        for (i in 1 until nav.size) assertTrue(nav[i].rect.top >= nav[i - 1].rect.bottom, "nav stacked: ${nav[i].id}")
+        assertTrue(foot.first().rect.top >= nav.last().rect.bottom, "foot below nav")
     }
 
-    @Test fun `title hit-testing maps a point to its button and misses empty space`() {
-        val sp = TitleLayout.buttons(w, h).first().rect
-        assertEquals("singleplayer", TitleLayout.hit(w, h, sp.left + 1, sp.top + 1))
-        assertNull(TitleLayout.hit(w, h, 2, 2))
+    @Test fun `title hit maps a nav row and misses the empty corner`() {
+        val sp = TitleLayout.navButtons(w, h).first { it.id == "singleplayer" }.rect
+        assertEquals("singleplayer", TitleLayout.hit(w, h, sp.left + 2, sp.top + 2))
+        assertNull(TitleLayout.hit(w, h, w - 2, h - 2))
     }
 
-    @Test fun `pause buttons are centred, below the title and on-screen`() {
-        val btns = PauseLayout.buttons(w, h)
-        assertEquals(PauseLayout.IDS, btns.map { it.id })
-        for (b in btns) assertEquals((w - b.rect.width) / 2, b.rect.left)
-        assertTrue(btns.first().rect.top > PauseLayout.titleY(h) + 30, "column starts below the title")
-        assertTrue(btns.last().rect.bottom < h, "column fits on screen")
+    @Test fun `pause controls carry their ids and fit the card`() {
+        val c = PauseLayout.controls(w, h)
+        val p = PauseLayout.panelRect(w, h)
+        assertEquals(PauseLayout.IDS, c.map { it.id })
+        assertTrue(c.first().rect.top >= p.top, "first control inside the card")
+        assertTrue(c.last().rect.bottom <= p.bottom, "last control inside the card")
     }
 
-    @Test fun `pause hit-testing resolves the disconnect button`() {
-        val d = PauseLayout.buttons(w, h).last().rect
-        assertEquals("disconnect", PauseLayout.hit(w, h, d.left + d.width / 2, d.top + d.height / 2))
+    @Test fun `pause hit resolves the save-and-quit button`() {
+        val d = PauseLayout.controls(w, h).last().rect
+        assertEquals("savequit", PauseLayout.hit(w, h, d.left + d.width / 2, d.top + d.height / 2))
     }
 }

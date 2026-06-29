@@ -1,8 +1,11 @@
 package gg.snell.mod.platform
 
 import gg.snell.mod.module.ModuleManager
+import gg.snell.mod.platform.screens.SnellOptionsScreen
 import gg.snell.mod.platform.screens.SnellPauseScreen
+import gg.snell.mod.platform.screens.SnellServerSelectScreen
 import gg.snell.mod.platform.screens.SnellTitleScreen
+import gg.snell.mod.platform.screens.SnellWorldSelectScreen
 import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
@@ -18,6 +21,9 @@ import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.PauseScreen
 import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.gui.screens.options.OptionsScreen
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.resources.Identifier
@@ -72,10 +78,17 @@ class FabricMinecraftBridge : MinecraftBridge {
         ScreenEvents.AFTER_INIT.register(
             ScreenEvents.AfterInit { client, screen, _, _ ->
                 if (!enabled()) return@AfterInit
+                val eligible = screen is TitleScreen || screen is PauseScreen ||
+                    screen is SelectWorldScreen || screen is JoinMultiplayerScreen || screen is OptionsScreen
+                if (!eligible) return@AfterInit
+                // Let a bespoke screen hand one flow back to vanilla (e.g. server Add/Edit/Direct).
+                if (SnellMenus.bypassNext) { SnellMenus.bypassNext = false; return@AfterInit }
                 when (screen) {
                     is TitleScreen -> client.setScreenAndShow(SnellTitleScreen())
                     is PauseScreen -> client.setScreenAndShow(SnellPauseScreen())
-                    else -> {}
+                    is SelectWorldScreen -> client.setScreenAndShow(SnellWorldSelectScreen(null))
+                    is JoinMultiplayerScreen -> client.setScreenAndShow(SnellServerSelectScreen(null))
+                    is OptionsScreen -> client.setScreenAndShow(SnellOptionsScreen(null))
                 }
             },
         )

@@ -4,111 +4,93 @@ import gg.snell.mod.editor.Control
 import gg.snell.mod.editor.Rect
 
 /**
- * Pure layout for the bespoke Options screen: a centred panel with a header, a 2-column grid of
- * option rows, a footer row of category buttons and a Done button. No Minecraft types, so it can
- * be unit-tested and headlessly rendered.
- *
- * Coordinates are all derived from [panelRect], so every region scales with the screen.
+ * Pure layout for the bespoke Options screen (design: "Snell In-Game Menus"): a large centred card —
+ * a header (back + "Options" + Done), a left category rail (Video / Controls / Audio | Mods) and a
+ * scrollable content column of full-width rows (label on the left, a control on the right). The
+ * content is a flat list the screen builds from the live game options (section headers + option rows
+ * share the same [rowRect] cadence). No Minecraft types — unit-testable and headlessly renderable.
  */
 object OptionsLayout {
-    /** Title-bar height inside the panel (matches [gg.snell.mod.ui.SnellUi.header]). */
-    const val HEADER_H = 22
+    val CATEGORIES = listOf("video", "controls", "audio", "mods")
+    const val HEADER_H = 32
+    const val RAIL_W = 104
+    const val ROW_H = 26
+    const val ROW_GAP = 4
+    private const val PAD = 12
+    private const val CTRL_W = 150
+    private const val SCROLL_GUTTER = 8
 
-    /** Inner padding between the panel edge and its content. */
-    const val PAD = 12
-
-    /** A single option row. */
-    const val ROW_H = 22
-    const val ROW_GAP = 6
-
-    /** The grid is always two columns wide. */
-    const val ITEM_COLUMNS = 2
-    const val COL_GAP = 10
-
-    /** Footer button height + the gap between the category row and the Done row. */
-    const val FOOTER_H = 22
-    const val FOOTER_GAP = 6
-
-    /** Width of the right-hand control area inside each row (toggle / cycle / slider). */
-    const val CONTROL_W = 96
-
-    /** Category footer-button ids, left to right. */
-    val CATEGORIES = listOf("video", "sound", "controls", "chat", "accessibility")
-    const val CAT_GAP = 6
-
-    /** Done button width, right-aligned on its own row. */
-    const val DONE_W = 100
-
-    // ---- panel ---------------------------------------------------------------------------------
-
-    /** Centred card. Capped so it leaves margins on big screens and never overflows small ones. */
     fun panelRect(w: Int, h: Int): Rect {
-        val pw = minOf(w - 32, 460)
-        val ph = minOf(h - 32, 320)
+        val pw = (w - 36).coerceIn(360, 660)
+        val ph = (h - 28).coerceIn(240, 700)
         return Rect((w - pw) / 2, (h - ph) / 2, pw, ph)
     }
 
-    // ---- grid ----------------------------------------------------------------------------------
-
-    private fun gridLeft(p: Rect) = p.left + PAD
-    private fun gridTop(p: Rect) = p.top + HEADER_H + PAD
-    private fun gridWidth(p: Rect) = p.width - 2 * PAD
-    private fun colWidth(p: Rect) = (gridWidth(p) - COL_GAP) / ITEM_COLUMNS
-
-    /** Full row rect for option [index] (left column = even indices, right column = odd). */
-    fun itemRect(index: Int, w: Int, h: Int): Rect {
+    fun backButton(w: Int, h: Int): Rect {
         val p = panelRect(w, h)
-        val cw = colWidth(p)
-        val col = index % ITEM_COLUMNS
-        val row = index / ITEM_COLUMNS
-        val x = gridLeft(p) + col * (cw + COL_GAP)
-        val y = gridTop(p) + row * (ROW_H + ROW_GAP)
-        return Rect(x, y, cw, ROW_H)
+        return Rect(p.left + PAD, p.top + (HEADER_H - 22) / 2, 22, 22)
     }
 
-    /** The right-hand control area within an item row — hit-test the toggle/cycle/slider here. */
-    fun controlRect(index: Int, w: Int, h: Int): Rect {
-        val row = itemRect(index, w, h)
-        return Rect(row.right - CONTROL_W, row.top, CONTROL_W, row.height)
+    fun doneButton(w: Int, h: Int): Control {
+        val p = panelRect(w, h); val bw = 58
+        return Control("done", Rect(p.right - PAD - bw, p.top + (HEADER_H - 22) / 2, bw, 22))
     }
 
-    // ---- footer --------------------------------------------------------------------------------
+    fun railRect(w: Int, h: Int): Rect {
+        val p = panelRect(w, h); val top = p.top + HEADER_H
+        return Rect(p.left, top, RAIL_W, p.bottom - top)
+    }
 
-    private fun doneTop(p: Rect) = p.bottom - PAD - FOOTER_H
-    private fun catTop(p: Rect) = doneTop(p) - FOOTER_GAP - FOOTER_H
-
-    /** Category buttons, equally dividing the grid width on the row above [doneButton]. */
-    fun categoryButtons(w: Int, h: Int): List<Control> {
-        val p = panelRect(w, h)
-        val n = CATEGORIES.size
-        val total = gridWidth(p)
-        val cw = (total - (n - 1) * CAT_GAP) / n
-        val y = catTop(p)
-        val out = ArrayList<Control>(n)
-        var x = gridLeft(p)
+    /** Category rail items; a 10px gap precedes "mods" (the design's divider). */
+    fun railItems(w: Int, h: Int): List<Control> {
+        val rail = railRect(w, h); val x = rail.left + 8; val cw = rail.width - 16; val ih = 26
+        var y = rail.top + 10
+        val out = ArrayList<Control>(CATEGORIES.size)
         for (id in CATEGORIES) {
-            out += Control(id, Rect(x, y, cw, FOOTER_H))
-            x += cw + CAT_GAP
+            if (id == "mods") y += 10
+            out += Control(id, Rect(x, y, cw, ih)); y += ih + 4
         }
         return out
     }
 
-    /** The primary Done button, right-aligned on the bottom footer row. */
-    fun doneButton(w: Int, h: Int): Control {
-        val p = panelRect(w, h)
-        return Control("done", Rect(p.right - PAD - DONE_W, doneTop(p), DONE_W, FOOTER_H))
+    fun contentRect(w: Int, h: Int): Rect {
+        val p = panelRect(w, h); val rail = railRect(w, h)
+        val left = rail.right + 1 + PAD; val top = p.top + HEADER_H + PAD
+        return Rect(left, top, p.right - PAD - left, p.bottom - PAD - top)
     }
 
-    /** Index of the option row under the cursor, or -1. */
-    fun hitItem(w: Int, h: Int, mouseX: Int, mouseY: Int, count: Int): Int {
-        for (i in 0 until count) if (itemRect(i, w, h).contains(mouseX, mouseY)) return i
-        return -1
+    private fun stride() = ROW_H + ROW_GAP
+    fun contentHeight(count: Int): Int = if (count <= 0) 0 else count * ROW_H + (count - 1) * ROW_GAP
+    fun maxScroll(count: Int, w: Int, h: Int): Int = (contentHeight(count) - contentRect(w, h).height).coerceAtLeast(0)
+
+    fun rowRect(index: Int, scrollY: Int, w: Int, h: Int): Rect {
+        val c = contentRect(w, h)
+        return Rect(c.left, c.top + index * stride() - scrollY, c.width - SCROLL_GUTTER, ROW_H)
     }
 
-    /** Id of the category/Done button under the cursor, or null. */
-    fun hitButton(w: Int, h: Int, mouseX: Int, mouseY: Int): String? {
-        val done = doneButton(w, h)
-        if (done.rect.contains(mouseX, mouseY)) return done.id
-        return categoryButtons(w, h).firstOrNull { it.rect.contains(mouseX, mouseY) }?.id
+    /** The right-hand control area within a row (toggle / cycle / slider hit-test + draw). */
+    fun controlRect(row: Rect): Rect {
+        val cw = minOf(CTRL_W, row.width / 2)
+        return Rect(row.right - cw, row.top, cw, row.height)
+    }
+
+    fun scrollbarX(w: Int, h: Int): Int = contentRect(w, h).right - 3
+
+    fun visibleRange(count: Int, scrollY: Int, w: Int, h: Int): IntRange {
+        if (count <= 0) return IntRange.EMPTY
+        val c = contentRect(w, h); val s = stride()
+        val first = (scrollY / s).coerceAtLeast(0)
+        val last = ((scrollY + c.height) / s).coerceAtMost(count - 1)
+        return if (last < first) IntRange.EMPTY else first..last
+    }
+
+    fun railHit(w: Int, h: Int, mx: Int, my: Int): String? =
+        railItems(w, h).firstOrNull { it.rect.contains(mx, my) }?.id
+
+    /** Header hits only (back / done / category). Content-row hits go through [rowRect]/[controlRect]. */
+    fun hit(w: Int, h: Int, mx: Int, my: Int): String? {
+        if (backButton(w, h).contains(mx, my)) return "back"
+        if (doneButton(w, h).rect.contains(mx, my)) return "done"
+        return railHit(w, h, mx, my)
     }
 }

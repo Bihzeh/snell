@@ -8,136 +8,117 @@ import gg.snell.mod.ui.SnellUi
 import gg.snell.shared.SnellPalette
 
 /**
- * Pure renderer for the bespoke multiplayer server picker — backdrop, card, "Multiplayer" header,
- * scrollable server list, and a footer action bar. Matches the launcher chrome via [SnellUi].
- *
- * The canvas has no clipping, so rows are drawn first (only those in the visible range) and may
- * bleed a few pixels past the viewport at the top/bottom edges; the header and footer bands are
- * then repainted on top, masking any overflow cleanly.
+ * Pure renderer for the bespoke multiplayer server picker (design: "Snell In-Game Menus") — scrim +
+ * card, a back/title/refresh header, the visible slice of the server list (initial tile, name, motd,
+ * players + ping + signal bars / status pill), a scrollbar, and the footer action bar. Rows draw
+ * first; the header/footer bands repaint on top to mask overflow.
  */
 object ServerSelectRenderer {
-    private val LABELS = mapOf(
-        "join" to "Join",
-        "direct" to "Direct Connect",
-        "add" to "Add Server",
-        "edit" to "Edit",
-        "delete" to "Delete",
-        "refresh" to "Refresh",
-        "cancel" to "Cancel",
-    )
-
-    fun render(
-        canvas: EditorCanvas,
-        w: Int,
-        h: Int,
-        mouseX: Int,
-        mouseY: Int,
-        rows: List<ServerRow>,
-        selected: Int,
-        scrollY: Int,
-    ) {
-        SnellUi.backdrop(canvas, w, h)
+    fun render(canvas: EditorCanvas, w: Int, h: Int, mouseX: Int, mouseY: Int, rows: List<ServerRow>, selected: Int, scrollY: Int) {
+        SnellUi.scrim(canvas, w, h)
         val p = ServerSelectLayout.panelRect(w, h)
         SnellUi.panel(canvas, p)
 
-        val vp = ServerSelectLayout.listViewport(w, h)
+        val list = ServerSelectLayout.listRect(w, h)
         if (rows.isEmpty()) {
-            emptyState(canvas, vp)
+            emptyState(canvas, list)
         } else {
             for (i in ServerSelectLayout.visibleRange(rows.size, scrollY, w, h)) {
-                drawRow(canvas, ServerSelectLayout.rowRect(i, scrollY, w, h), rows[i], i == selected, mouseX, mouseY, vp)
+                val r = ServerSelectLayout.rowRect(i, scrollY, w, h)
+                if (r.bottom <= list.top || r.top >= list.bottom) continue
+                drawRow(canvas, r, rows[i], i == selected, mouseX, mouseY)
             }
-            SnellUi.scrollbar(canvas, vp.right - 4, vp.top, vp.height, ServerSelectLayout.contentHeight(rows.size), scrollY)
+            SnellUi.scrollbar(canvas, ServerSelectLayout.scrollbarX(w, h), list.top, list.height, ServerSelectLayout.contentHeight(rows.size), scrollY)
         }
 
-        // Mask any row overflow above the viewport, then lay the header chrome on top.
-        canvas.fill(p.left + 1, p.top + 1, p.width - 2, (vp.top - (p.top + 1)).coerceAtLeast(0), SnellPalette.s1)
-        SnellUi.header(canvas, p, ServerSelectLayout.HEADER_H, "Multiplayer")
-        if (rows.isNotEmpty()) {
-            val chip = if (rows.size == 1) "1 server" else "${rows.size} servers"
-            canvas.drawText(
-                p.right - 12 - canvas.textWidth(chip),
-                p.top + (ServerSelectLayout.HEADER_H - canvas.lineHeight) / 2,
-                chip,
-                SnellPalette.text3,
-            )
-        }
+        // header band
+        canvas.fill(p.left + 1, p.top + 1, p.width - 2, list.top - (p.top + 1), SnellPalette.menuPanel)
+        val back = ServerSelectLayout.backButton(w, h)
+        SnellUi.squareButton(canvas, back, back.contains(mouseX, mouseY))
+        SnellUi.chevronLeft(canvas, back.left + back.width / 2, back.top + back.height / 2, 3, SnellPalette.text)
+        val titleX = back.right + 9
+        canvas.drawText(titleX, p.top + 6, "Multiplayer", SnellPalette.text)
+        canvas.drawText(titleX, p.top + 6 + canvas.lineHeight + 1, "${rows.size} ${if (rows.size == 1) "server" else "servers"}", SnellPalette.menuText3)
+        val refresh = ServerSelectLayout.refreshButton(w, h)
+        SnellUi.squareButton(canvas, refresh, refresh.contains(mouseX, mouseY))
+        canvas.border(refresh.left + 6, refresh.top + 5, refresh.width - 12, refresh.height - 10, SnellPalette.text2)
+        SnellUi.divider(canvas, p.left + 1, p.top + ServerSelectLayout.HEADER_H, p.width - 2)
 
-        // Mask overflow below the viewport, then draw the footer divider + action bar.
-        val footTop = p.bottom - ServerSelectLayout.FOOTER_H
-        canvas.fill(p.left + 1, vp.bottom, p.width - 2, (p.bottom - 1 - vp.bottom).coerceAtLeast(0), SnellPalette.s1)
-        canvas.fill(p.left + 1, footTop, p.width - 2, 1, SnellPalette.border)
-
+        // footer band
+        canvas.fill(p.left + 1, list.bottom, p.width - 2, p.bottom - 1 - list.bottom, SnellPalette.menuPanel)
+        SnellUi.divider(canvas, p.left + 1, p.bottom - ServerSelectLayout.FOOTER_H, p.width - 2)
         val hasSel = selected in rows.indices
-        for (c in ServerSelectLayout.buttons(w, h)) {
-            val enabled = when (c.id) {
-                "join", "edit", "delete" -> hasSel  // need a selected server
-                else -> true                         // direct / add / refresh / cancel always live
-            }
-            SnellUi.button(
-                canvas, c.rect, LABELS[c.id] ?: c.id, styleFor(c.id),
-                hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled,
-            )
+        for (c in ServerSelectLayout.footerButtons(w, h)) {
+            val style = when (c.id) { "join" -> SnellBtn.Primary; "cancel" -> SnellBtn.Ghost; else -> SnellBtn.Secondary }
+            val enabled = if (c.id == "join") hasSel else true
+            val label = when (c.id) { "join" -> "Join"; "add" -> "Add Server"; "direct" -> "Direct Connect"; else -> "Cancel" }
+            SnellUi.button(canvas, c.rect, label, style, hover = enabled && c.rect.contains(mouseX, mouseY), enabled = enabled)
         }
     }
 
-    private fun styleFor(id: String): SnellBtn = when (id) {
-        "join" -> SnellBtn.Primary
-        "delete" -> SnellBtn.Danger
-        "cancel" -> SnellBtn.Ghost
-        else -> SnellBtn.Secondary
-    }
-
-    private fun drawRow(canvas: EditorCanvas, r: Rect, row: ServerRow, selected: Boolean, mouseX: Int, mouseY: Int, vp: Rect) {
-        val hover = vp.contains(mouseX, mouseY) && r.contains(mouseX, mouseY)
-        SnellUi.listRow(canvas, r, selected, hover, under = SnellPalette.s1)
-
-        // Rounded icon-placeholder square with the server's initial in accent.
-        val pad = (r.height - 28) / 2
-        val ix = r.left + pad
-        val iy = r.top + pad
-        canvas.fill(ix, iy, 28, 28, SnellPalette.s2)
-        canvas.border(ix, iy, 28, 28, SnellPalette.border)
-        SnellUi.round(canvas, Rect(ix, iy, 28, 28), SnellPalette.s1)
+    private fun drawRow(canvas: EditorCanvas, r: Rect, row: ServerRow, selected: Boolean, mouseX: Int, mouseY: Int) {
+        SnellUi.listRow(canvas, r, selected, r.contains(mouseX, mouseY))
+        val ts = r.height - 10
+        val tile = Rect(r.left + 5, r.top + 5, ts, ts)
+        val tint = initialColor(row.name)
+        SnellUi.iconTile(canvas, tile, SnellPalette.withAlpha(tint, 0x33), SnellPalette.withAlpha(tint, 0x66))
         val glyph = row.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-        canvas.drawText(ix + (28 - canvas.textWidth(glyph)) / 2, iy + (28 - canvas.lineHeight) / 2 + 1, glyph, SnellPalette.accent)
+        canvas.drawText(tile.left + (tile.width - canvas.textWidth(glyph)) / 2, tile.top + (tile.height - canvas.lineHeight) / 2 + 1, glyph, tint)
 
-        // Right-aligned status pill (its width matches SnellUi.pill's internal sizing).
-        val (pillText, pillRole) = pillFor(row)
-        val pillW = canvas.textWidth(pillText) + 16
-        val pillH = canvas.lineHeight + 6
-        val px = r.right - 8 - pillW
-        SnellUi.pill(canvas, px, r.top + (r.height - pillH) / 2, pillText, pillRole)
-
-        // Name + motd, ellipsized to the gap before the pill.
-        val tx = ix + 28 + 8
-        val textMaxW = (px - 8 - tx).coerceAtLeast(8)
-        val blockTop = r.top + (r.height - (canvas.lineHeight * 2 + 3)) / 2
-        canvas.drawText(tx, blockTop, SnellUi.ellipsize(canvas, row.name, textMaxW), SnellPalette.text)
+        val tx = tile.right + 8
+        val rx = r.right - 8
+        val nameMaxW = (rx - 60) - tx
+        canvas.drawText(tx, r.top + 6, SnellUi.ellipsize(canvas, row.name, nameMaxW), SnellPalette.text)
         val sub = row.motd.ifEmpty { row.address }
-        canvas.drawText(tx, blockTop + canvas.lineHeight + 3, SnellUi.ellipsize(canvas, sub, textMaxW), SnellPalette.text2)
-    }
+        canvas.drawText(tx, r.top + 6 + canvas.lineHeight + 2, SnellUi.ellipsize(canvas, sub, nameMaxW), SnellPalette.text2)
 
-    /** Pill copy + role for a row's reachability. */
-    private fun pillFor(row: ServerRow): Pair<String, PillRole> = when (row.status) {
-        ServerStatus.Online -> {
-            val text = when {
-                row.ping < 0 -> row.players.ifEmpty { "Online" }
-                row.players.isEmpty() -> "${row.ping}ms"
-                else -> "${row.players}  ${row.ping}ms"
+        when (row.status) {
+            ServerStatus.Online -> {
+                if (row.players.isNotEmpty()) canvas.drawText(rx - canvas.textWidth(row.players), r.top + 6, row.players, SnellPalette.text)
+                val pc = pingColor(row.ping)
+                drawBars(canvas, rx - 16, r.top + r.height - 9, pc, barsFor(row.ping))
+                if (row.ping >= 0) {
+                    val pt = "${row.ping}ms"
+                    canvas.drawText(rx - 18 - canvas.textWidth(pt), r.top + r.height - 12, pt, pc)
+                }
             }
-            text to PillRole.Online
+            ServerStatus.Offline -> rightPill(canvas, r, rx, "Offline", PillRole.Offline)
+            ServerStatus.Pinging -> rightPill(canvas, r, rx, "Pinging", PillRole.Neutral)
         }
-        ServerStatus.Offline -> "Offline" to PillRole.Offline
-        ServerStatus.Pinging -> "Pinging…" to PillRole.Neutral
     }
 
-    private fun emptyState(canvas: EditorCanvas, vp: Rect) {
+    private fun rightPill(canvas: EditorCanvas, r: Rect, rx: Int, text: String, role: PillRole) {
+        val pw = canvas.textWidth(text) + 16
+        SnellUi.pill(canvas, rx - pw, r.top + (r.height - (canvas.lineHeight + 6)) / 2, text, role)
+    }
+
+    private fun drawBars(canvas: EditorCanvas, x: Int, baseY: Int, color: Int, lit: Int) {
+        for (i in 0..3) {
+            val bh = 2 + i * 2
+            canvas.fill(x + i * 4, baseY - bh, 2, bh, if (i < lit) color else SnellPalette.withAlpha(SnellUi.WHITE, 0x16))
+        }
+    }
+
+    private fun barsFor(ping: Int): Int = when {
+        ping < 0 -> 0; ping < 60 -> 4; ping < 120 -> 3; ping < 250 -> 2; else -> 1
+    }
+
+    private fun pingColor(ping: Int): Int = when {
+        ping < 0 -> SnellPalette.menuText3; ping < 80 -> SnellPalette.accent; ping < 180 -> SnellPalette.gold; else -> SnellPalette.danger
+    }
+
+    /** A stable tint per server, keyed off the name's first character. */
+    private fun initialColor(name: String): Int {
+        val palette = intArrayOf(SnellPalette.accent, SnellPalette.gold, SnellPalette.info, SnellPalette.ember, SnellPalette.success)
+        val c = name.trim().firstOrNull()?.code ?: 0
+        return palette[c % palette.size]
+    }
+
+    private fun emptyState(canvas: EditorCanvas, list: Rect) {
         val title = "No servers yet"
-        val s = 1.4f
-        val tw = (canvas.textWidth(title) * s).toInt()
-        SnellUi.heading(canvas, vp.left + (vp.width - tw) / 2, vp.top + vp.height / 2 - canvas.lineHeight, title, s, SnellPalette.text2)
-        val sub = "Use \"Add Server\" to add one."
-        canvas.drawText(vp.left + (vp.width - canvas.textWidth(sub)) / 2, vp.top + vp.height / 2 + canvas.lineHeight, sub, SnellPalette.text3)
+        val hint = "Use \"Add Server\" to add one."
+        val cy = list.top + list.height / 2
+        canvas.drawText(list.left + (list.width - canvas.textWidth(title)) / 2, cy - canvas.lineHeight, title, SnellPalette.text2)
+        canvas.drawText(list.left + (list.width - canvas.textWidth(hint)) / 2, cy + 2, hint, SnellPalette.menuText3)
     }
 }

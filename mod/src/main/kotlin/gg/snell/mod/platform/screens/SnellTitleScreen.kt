@@ -5,29 +5,27 @@ import gg.snell.mod.menu.TitleRenderer
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.platform.SnellMenuScreen
 import gg.snell.mod.platform.SnellMenus
-import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
-import net.minecraft.client.gui.screens.options.OptionsScreen
-import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import net.minecraft.network.chat.Component
 
 /**
- * Bespoke main menu. Renders the Snell title (slipstream lockup + button column) and delegates each
- * action to the same vanilla call the original TitleScreen makes — the sub-screens it opens are in
- * turn re-skinned by the screen-swap mixin once those bespoke screens land.
+ * Bespoke main menu. Renders the Snell title (command column + quick actions) and opens the bespoke
+ * sub-screens directly (so they return here on back). The Discord / wallet / cosmetics / friends
+ * quick actions are styled placeholders for now (no-op until those surfaces are built).
  */
 class SnellTitleScreen : SnellMenuScreen(Component.literal("Snell")) {
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        TitleRenderer.render(canvas, width, height, mouseX, mouseY, SnellMenus.VERSION)
+        TitleRenderer.render(canvas, width, height, mouseX, mouseY, SnellMenus.VERSION, mc.user.name)
 
     override fun hitId(mouseX: Int, mouseY: Int): String? = TitleLayout.hit(width, height, mouseX, mouseY)
 
     override fun onActivate(id: String) {
         when (id) {
-            "singleplayer" -> mc.setScreenAndShow(SelectWorldScreen(this))
-            "multiplayer" -> mc.setScreenAndShow(JoinMultiplayerScreen(this))
-            "options" -> mc.setScreenAndShow(OptionsScreen(this, mc.options, false))
+            "singleplayer" -> mc.setScreenAndShow(SnellWorldSelectScreen(this))
+            "multiplayer" -> mc.setScreenAndShow(SnellServerSelectScreen(this))
+            "options" -> mc.setScreenAndShow(SnellOptionsScreen(this))
             "quit" -> mc.stop()
+            // discord / wallet / cosmetics / friends — placeholders (no-op for now)
         }
     }
 
