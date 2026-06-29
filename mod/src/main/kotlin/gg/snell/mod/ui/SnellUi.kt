@@ -113,6 +113,7 @@ object SnellUi {
 
     // ---- Tabler icons (bundled subset, drawn from the always-on `snell:icons` font) ------------
     private const val ICON_BASE = 10f // matches the icons.json font size
+    private const val ICON_V_NUDGE = -0.14f // MC draws the glyph low in its line; raise it to centre
     private val ICONS: Map<String, Char> = mapOf(
         "discord" to '', "singleplayer" to '', "multiplayer" to '', "options" to '',
         "quit" to '', "wallet" to '', "cosmetics" to '', "friends" to '',
@@ -127,13 +128,38 @@ object SnellUi {
     /** Draw a Tabler [name] icon centred at ([cx],[cy]), [size] px tall, tinted [color]. Unknown name = nothing. */
     fun icon(canvas: EditorCanvas, name: String, cx: Int, cy: Int, size: Int, color: Int) {
         val ch = ICONS[name] ?: return
-        val x = cx - size / 2; val y = cy - size / 2
-        canvas.withScale(size / ICON_BASE, x, y) { canvas.drawIcon(ch, 0, 0, color) }
+        val scale = size / ICON_BASE
+        val w = canvas.iconWidth(ch) * scale // centre on the glyph's real advance, not the box size
+        val px = (cx - w / 2f).toInt()
+        val py = (cy - size / 2f + size * ICON_V_NUDGE).toInt()
+        canvas.withScale(scale, px, py) { canvas.drawIcon(ch, 0, 0, color) }
     }
 
-    /** Draw the Snell slipstream brand mark texture into a [size]×[size] box at ([x],[y]). */
-    fun logo(canvas: EditorCanvas, x: Int, y: Int, size: Int) =
-        canvas.drawTexture("snell:textures/gui/snell_mark.png", x, y, size, size)
+    /**
+     * The Snell slipstream brand mark — three rounded cyan bars (middle widest), proportioned from
+     * the brand SVG. Drawn with fills so it renders identically in-game and in the headless preview
+     * (unlike a texture blit, which the preview can't reproduce).
+     */
+    fun slipstream(canvas: EditorCanvas, x: Int, y: Int, size: Int, color: Int = SnellPalette.accent) {
+        val bars = arrayOf(
+            floatArrayOf(0.453f, 0.086f, 0.336f), // width-frac, height-frac, centre-y-frac
+            floatArrayOf(0.594f, 0.102f, 0.500f),
+            floatArrayOf(0.406f, 0.086f, 0.664f),
+        )
+        for (b in bars) {
+            val bw = (size * b[0]).toInt().coerceAtLeast(2)
+            val bh = (size * b[1]).toInt().coerceAtLeast(2)
+            canvas.fill(x + (size - bw) / 2, y + (size * b[2]).toInt() - bh / 2, bw, bh, color)
+        }
+    }
+
+    /** Presence colour: green online / gold away / red offline. */
+    fun statusColor(status: String): Int = when (status.lowercase()) {
+        "online" -> SnellPalette.success
+        "away", "idle" -> SnellPalette.gold
+        "offline", "dnd", "busy" -> SnellPalette.danger
+        else -> SnellPalette.text3
+    }
 
     // ---- surfaces -----------------------------------------------------------------------------
 

@@ -55,10 +55,10 @@ object TitleRenderer {
         canvas.drawMono(22, h - 13, "SNELL $version  ·  Minecraft 26.2 · Fabric", SnellPalette.menuText3)
     }
 
-    /** The Snell slipstream mark (texture) beside the scaled SNELL wordmark, inline left. */
+    /** The Snell slipstream mark (fill bars) beside the scaled SNELL wordmark, inline left. */
     private fun lockup(canvas: EditorCanvas, r: Rect) {
         val markSize = r.height
-        SnellUi.logo(canvas, r.left, r.top, markSize)
+        SnellUi.slipstream(canvas, r.left, r.top, markSize)
         SnellUi.heading(canvas, r.left + markSize + 9, r.top + 6, "SNELL", 2.0f)
     }
 
@@ -72,8 +72,9 @@ object TitleRenderer {
         canvas.border(skin.left, skin.top, skin.width, skin.height, SnellPalette.outline)
         val tx = skin.right + 5
         canvas.drawText(tx, r.top + 4, SnellUi.ellipsize(canvas, username, r.right - 4 - tx), SnellPalette.text)
-        SnellUi.dot(canvas, tx + 2, r.bottom - 7, 3, SnellPalette.accent)
-        canvas.drawText(tx + 7, r.bottom - 11, status, SnellPalette.accent)
+        val sc = SnellUi.statusColor(status)
+        SnellUi.dot(canvas, tx + 3, r.bottom - 9, 4, sc)
+        canvas.drawText(tx + 9, r.bottom - 11, status, sc)
     }
 
     private fun whatsNew(canvas: EditorCanvas, r: Rect, version: String) {

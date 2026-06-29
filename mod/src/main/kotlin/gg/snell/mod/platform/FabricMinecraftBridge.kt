@@ -235,9 +235,13 @@ internal class EditorExtractorCanvas(
     }
 
     override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {
-        val c = Component.literal(glyph.toString()).setStyle(Style.EMPTY.withFont(net.minecraft.network.chat.FontDescription.Resource(ICONS_FONT)))
-        extractor.text(font, c, x, y, color, false) // icons get no drop shadow
+        extractor.text(font, iconComponent(glyph), x, y, color, false) // icons get no drop shadow
     }
+
+    override fun iconWidth(glyph: Char): Int = font.width(iconComponent(glyph))
+
+    private fun iconComponent(glyph: Char): Component =
+        Component.literal(glyph.toString()).setStyle(Style.EMPTY.withFont(net.minecraft.network.chat.FontDescription.Resource(ICONS_FONT)))
 
     override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {
         val p = id.split(":", limit = 2)

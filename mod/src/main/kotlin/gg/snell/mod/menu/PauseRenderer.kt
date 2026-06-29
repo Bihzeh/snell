@@ -19,7 +19,7 @@ object PauseRenderer {
         SnellUi.panel(canvas, p)
 
         val hd = PauseLayout.headerRect(w, h)
-        SnellUi.logo(canvas, hd.left, hd.top, 18)
+        SnellUi.slipstream(canvas, hd.left, hd.top, 18)
         val tx = hd.left + 24
         SnellUi.sectionLabel(canvas, tx, hd.top, "Paused")
         canvas.drawText(tx, hd.top + canvas.lineHeight + 3, SnellUi.ellipsize(canvas, worldName, hd.right - tx), SnellPalette.text)

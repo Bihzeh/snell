@@ -67,6 +67,8 @@ interface EditorCanvas : HudCanvas {
     fun overlayStratum()
     /** Draw a single icon glyph (Tabler, from the always-on `snell:icons` font) at top-left ([x],[y]), tinted [color]. */
     fun drawIcon(glyph: Char, x: Int, y: Int, color: Int)
+    /** Advance width of an icon glyph in the `snell:icons` font (for horizontal centring). */
+    fun iconWidth(glyph: Char): Int
     /** Blit a full texture (namespaced id, e.g. "snell:textures/gui/snell_mark.png") into the box ([x],[y],[w],[h]). */
     fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int)
 }

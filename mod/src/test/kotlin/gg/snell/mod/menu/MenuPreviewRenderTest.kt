@@ -54,10 +54,14 @@ class MenuPreviewRenderTest {
 
         override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {
             val f = iconFont ?: return
-            val saved = g.font; g.font = f; g.color = col(color)
-            g.drawString(glyph.toString(), x.toFloat(), y.toFloat() + g.fontMetrics.ascent)
-            g.font = saved
+            g.color = col(color)
+            // Top-anchor the glyph ink at (x,y) to approximate MC's top-anchored text (not the AWT baseline).
+            val gv = f.createGlyphVector(g.fontRenderContext, glyph.toString())
+            val b = gv.visualBounds
+            g.drawGlyphVector(gv, x.toFloat() - b.x.toFloat(), y.toFloat() - b.y.toFloat())
         }
+
+        override fun iconWidth(glyph: Char) = iconFont?.let { g.getFontMetrics(it).charWidth(glyph) } ?: 8
 
         override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {
             val res = "assets/" + id.replace(":", "/")
