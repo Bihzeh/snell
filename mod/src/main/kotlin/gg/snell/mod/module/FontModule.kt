@@ -7,6 +7,6 @@ package gg.snell.mod.module
  */
 class FontModule : Module {
     override val id = "font"
-    override val displayName = "Custom Font (Poppins)"
+    override val displayName = "Custom Font (Geist)"
     override var enabled = true // brand font on by default
 }

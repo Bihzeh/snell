@@ -1,5 +1,6 @@
 package gg.snell.mod.menu
 
+import gg.snell.mod.editor.LogoArt
 import gg.snell.mod.editor.Rect
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.ui.SnellBtn
@@ -18,11 +19,9 @@ object PauseRenderer {
         SnellUi.panel(canvas, p)
 
         val hd = PauseLayout.headerRect(w, h)
-        var by = hd.top + 2
-        listOf(10 to 0x1AA0D9, 13 to 0x00D9FF, 8 to 0x0E6FA8).forEach { (bw, rgb) ->
-            canvas.fill(hd.left, by, bw, 3, 0xFF000000.toInt() or rgb); by += 4
-        }
-        val tx = hd.left + 20
+        val mark = Rect(hd.left, hd.top, 18, 18)
+        for (b in LogoArt.bands(mark)) canvas.fill(b.rect.left, b.rect.top, b.rect.width, b.rect.height, b.color)
+        val tx = mark.right + 8
         SnellUi.sectionLabel(canvas, tx, hd.top, "Paused")
         canvas.drawText(tx, hd.top + canvas.lineHeight + 3, SnellUi.ellipsize(canvas, worldName, hd.right - tx), SnellPalette.text)
 

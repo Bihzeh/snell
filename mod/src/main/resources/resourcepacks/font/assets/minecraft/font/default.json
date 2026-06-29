@@ -3,7 +3,7 @@
     { "type": "reference", "id": "minecraft:include/space" },
     {
       "type": "ttf",
-      "file": "snell:poppins.ttf",
+      "file": "snell:geist.ttf",
       "size": 11.0,
       "oversample": 2.0,
       "shift": [0.0, 0.0],

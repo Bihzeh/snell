@@ -22,17 +22,17 @@ class FontPackResourceTest {
         assertEquals(listOf(88, 99), pack["max_format"]!!.jsonArray.map { it.jsonPrimitive.int })
     }
 
-    @Test fun `default font puts the poppins ttf ahead of the vanilla references`() {
+    @Test fun `default font puts the geist ttf ahead of the vanilla references`() {
         val txt = assertNotNull(text("resourcepacks/font/assets/minecraft/font/default.json"))
         val providers = Json.parseToJsonElement(txt).jsonObject["providers"]!!.jsonArray
         assertEquals("reference", providers[0].jsonObject["type"]!!.jsonPrimitive.content) // space first
         assertEquals("ttf", providers[1].jsonObject["type"]!!.jsonPrimitive.content)       // then our ttf (first-wins)
-        assertEquals("snell:poppins.ttf", providers[1].jsonObject["file"]!!.jsonPrimitive.content)
+        assertEquals("snell:geist.ttf", providers[1].jsonObject["file"]!!.jsonPrimitive.content)
     }
 
-    @Test fun `poppins ttf is bundled and non-empty`() {
-        val bytes = javaClass.classLoader.getResourceAsStream("resourcepacks/font/assets/snell/font/poppins.ttf")?.readBytes()
+    @Test fun `geist ttf is bundled and non-empty`() {
+        val bytes = javaClass.classLoader.getResourceAsStream("resourcepacks/font/assets/snell/font/geist.ttf")?.readBytes()
         assertNotNull(bytes)
-        assertTrue(bytes.size > 1000, "poppins.ttf should be a real font")
+        assertTrue(bytes.size > 1000, "geist.ttf should be a real font")
     }
 }

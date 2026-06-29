@@ -1,5 +1,6 @@
 package gg.snell.mod.menu
 
+import gg.snell.mod.editor.LogoArt
 import gg.snell.mod.editor.Rect
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.ui.SnellBtn
@@ -56,34 +57,33 @@ object TitleRenderer {
         canvas.drawText(22, h - 13, "SNELL $version  ·  Minecraft 26.2 · Fabric", SnellPalette.menuText3)
     }
 
-    /** The slipstream mark (three cyan bars) beside the scaled SNELL wordmark, inline left. */
+    /** The real Snell brand mark (gold-crown gem, via [LogoArt]) beside the scaled SNELL wordmark. */
     private fun lockup(canvas: EditorCanvas, r: Rect) {
-        val barH = 5; val gap = 3; var by = r.top + 2
-        listOf(34 to 0x1AA0D9, 44 to 0x00D9FF, 26 to 0x0E6FA8).forEach { (bw, rgb) ->
-            val bar = Rect(r.left, by, bw, barH)
-            canvas.fill(bar.left, bar.top, bar.width, bar.height, 0xFF000000.toInt() or rgb)
-            SnellUi.round(canvas, bar, SnellPalette.menuBase)
-            by += barH + gap
-        }
-        SnellUi.heading(canvas, r.left + 52, r.top + 5, "SNELL", 2.2f)
+        val markSize = r.height
+        val mark = Rect(r.left, r.top, markSize, markSize)
+        for (b in LogoArt.bands(mark)) canvas.fill(b.rect.left, b.rect.top, b.rect.width, b.rect.height, b.color)
+        SnellUi.heading(canvas, mark.right + 9, r.top + 6, "SNELL", 2.0f)
     }
 
-    /** A small representative glyph inside a nav row's icon tile. */
+    /** A clean minimal glyph inside a nav row's icon tile (no SVG primitives in-game). */
     private fun navGlyph(canvas: EditorCanvas, id: String, tile: Rect, color: Int) {
         val cx = tile.left + tile.width / 2; val cy = tile.top + tile.height / 2
         when (id) {
-            "discord" -> {
-                canvas.fill(tile.left + 3, cy - 2, tile.width - 6, 5, color)
-                SnellUi.dot(canvas, cx - 2, cy, 2, SnellPalette.menuPanel); SnellUi.dot(canvas, cx + 2, cy, 2, SnellPalette.menuPanel)
+            "discord" -> { // rounded chat bubble + two eyes
+                val bw = tile.width - 6; val bh = tile.height - 7
+                val b = Rect(tile.left + 3, tile.top + 3, bw, bh)
+                canvas.fill(b.left, b.top, b.width, b.height, color)
+                SnellUi.round(canvas, b, SnellPalette.menuPanel)
+                SnellUi.dot(canvas, cx - 2, cy - 1, 2, SnellPalette.menuPanel); SnellUi.dot(canvas, cx + 2, cy - 1, 2, SnellPalette.menuPanel)
             }
-            "singleplayer" -> {
-                canvas.border(tile.left + 3, tile.top + 3, tile.width - 6, tile.height - 6, color)
-                canvas.fill(cx, tile.top + 3, 1, tile.height - 6, color)
-                canvas.fill(tile.left + 3, cy, tile.width - 6, 1, color)
+            "singleplayer" -> { // a single person: head + shoulders
+                SnellUi.dot(canvas, cx, cy - 3, 4, color)
+                val sh = Rect(cx - 4, cy + 1, 8, 5)
+                canvas.fill(sh.left, sh.top, sh.width, sh.height, color); SnellUi.round(canvas, sh, SnellPalette.menuPanel)
             }
-            "multiplayer" -> {
-                canvas.fill(cx - 5, cy + 3, 11, 1, color); canvas.fill(cx - 3, cy, 7, 1, color)
-                SnellUi.dot(canvas, cx, cy + 4, 2, color)
+            "multiplayer" -> { // a group: three heads
+                SnellUi.dot(canvas, cx - 4, cy + 1, 3, color); SnellUi.dot(canvas, cx + 4, cy + 1, 3, color)
+                SnellUi.dot(canvas, cx, cy - 2, 4, color)
             }
         }
     }
