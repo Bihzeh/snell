@@ -59,7 +59,7 @@ object WorldAdapter {
             d < 60_000L -> "just now"
             d < 3_600_000L -> "${d / 60_000L} min ago"
             d < 86_400_000L -> "${d / 3_600_000L} hr ago"
-            else -> "${d / 86_400_000L} days ago"
+            else -> (d / 86_400_000L).let { "$it ${if (it == 1L) "day" else "days"} ago" }
         }
     }
 

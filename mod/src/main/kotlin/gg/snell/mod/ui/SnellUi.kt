@@ -181,17 +181,17 @@ object SnellUi {
     private val night = 0xFF0B0A12.toInt() // the mockup's rgba(11,10,18) scrim base
 
     /**
-     * The mockup's radial + linear scrims, drawn translucently OVER the live blurred panorama (so the
-     * scene shows through). GuiGraphics has only vertical gradients, so the CSS radial (focus ~32%
-     * height) and linear (0.45→0.05@38%→0.68) are approximated as stacked vertical bands: lightest near
-     * the focus, darkening to the top edge and (more) to the bottom so the command column reads.
+     * A light scrim over the live blurred panorama (the scene must show through). Deliberately MUCH
+     * lighter than the mockup's CSS: the mockup darkens a *bright* dusk still that it also brightens
+     * (`brightness(0.62)`), but the live 26.2 title cubemap is already dim and we can't brighten it —
+     * so stacking the mockup's 0.45/0.68 scrims crushed it to near-black. Two bands only: a gentle top
+     * fade for the wordmark/chips, a near-clear middle so the scene reads, and a heavier bottom so the
+     * translucent command cards / what's-new still have contrast.
      */
     fun menuScrims(canvas: EditorCanvas, w: Int, h: Int) {
-        val r = (h * 0.32f).toInt(); val m = (h * 0.38f).toInt()
-        canvas.gradientV(0, 0, w, r, SnellPalette.withAlpha(SnellPalette.menuBase, 0x55), SnellPalette.withAlpha(night, 0x1A))
-        canvas.gradientV(0, r, w, h - r, SnellPalette.withAlpha(night, 0x1A), SnellPalette.withAlpha(SnellPalette.menuBase, 0xB8))
-        canvas.gradientV(0, 0, w, m, SnellPalette.withAlpha(night, 0x73), SnellPalette.withAlpha(night, 0x0D))
-        canvas.gradientV(0, m, w, h - m, SnellPalette.withAlpha(night, 0x0D), SnellPalette.withAlpha(SnellPalette.menuBase, 0xAD))
+        val m = (h * 0.40f).toInt()
+        canvas.gradientV(0, 0, w, m, SnellPalette.withAlpha(night, 0x3A), SnellPalette.withAlpha(night, 0x08))
+        canvas.gradientV(0, m, w, h - m, SnellPalette.withAlpha(night, 0x08), SnellPalette.withAlpha(SnellPalette.menuBase, 0xAE))
     }
 
     /**
