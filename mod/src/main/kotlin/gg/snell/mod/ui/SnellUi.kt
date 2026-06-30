@@ -50,12 +50,38 @@ object SnellUi {
         return t.trimEnd() + "…"
     }
 
-    /** Knock ~2px corners to [bg] so a panel/row/button reads as rounded over that surface. */
+    /** Knock ~2px corners to [bg] so a tiny element (slider/switch knob) reads as rounded. Surfaces use [surface]. */
     fun round(canvas: EditorCanvas, r: Rect, bg: Int) {
         canvas.fill(r.left, r.top, 2, 1, bg); canvas.fill(r.left, r.top, 1, 2, bg)
         canvas.fill(r.right - 2, r.top, 2, 1, bg); canvas.fill(r.right - 1, r.top, 1, 2, bg)
         canvas.fill(r.left, r.bottom - 1, 2, 1, bg); canvas.fill(r.left, r.bottom - 2, 1, 2, bg)
         canvas.fill(r.right - 2, r.bottom - 1, 2, 1, bg); canvas.fill(r.right - 1, r.bottom - 2, 1, 2, bg)
+    }
+
+    // ---- rounded surfaces (9-slice white-master sprites, tinted) -------------------------------
+    // Replace the old fill+border+round(knock) triple with real rounded corners. radius ~6 (rrect),
+    // ~3 (sm: chips/keycaps/fields), or full capsule (pill: wallet/status/switch track).
+
+    /** A rounded-rect surface: [fill] tint + optional [border] ring (radius ~6). */
+    fun surface(canvas: EditorCanvas, r: Rect, fill: Int, border: Int? = null) {
+        canvas.sprite("snell:shape/rrect", r.left, r.top, r.width, r.height, fill)
+        if (border != null) canvas.sprite("snell:shape/rrect_outline", r.left, r.top, r.width, r.height, border)
+    }
+
+    /** A small rounded-rect surface (radius ~3) for chips / keycaps / fields. */
+    fun surfaceSm(canvas: EditorCanvas, r: Rect, fill: Int, border: Int? = null) {
+        canvas.sprite("snell:shape/rrect_sm", r.left, r.top, r.width, r.height, fill)
+        if (border != null) canvas.sprite("snell:shape/rrect_sm_outline", r.left, r.top, r.width, r.height, border)
+    }
+
+    /** A full-capsule surface (wallet pill, status pills, switch track): [fill] + optional 1px [border] ring. */
+    fun capsule(canvas: EditorCanvas, r: Rect, fill: Int, border: Int? = null) {
+        if (border != null) {
+            canvas.sprite("snell:shape/pill", r.left, r.top, r.width, r.height, border)
+            canvas.sprite("snell:shape/pill", r.left + 1, r.top + 1, r.width - 2, r.height - 2, fill)
+        } else {
+            canvas.sprite("snell:shape/pill", r.left, r.top, r.width, r.height, fill)
+        }
     }
 
     // ---- tiny vector glyphs (the fixed game font has no icon set) ------------------------------
@@ -191,9 +217,7 @@ object SnellUi {
     fun panel(canvas: EditorCanvas, r: Rect, under: Int = SnellPalette.menuBase) {
         canvas.fill(r.left + 4, r.bottom, r.width, 4, shadow)
         canvas.fill(r.right, r.top + 4, 4, r.height, shadow)
-        canvas.fill(r.left, r.top, r.width, r.height, SnellPalette.menuPanel)
-        canvas.border(r.left, r.top, r.width, r.height, panelBorder)
-        round(canvas, r, under)
+        surface(canvas, r, SnellPalette.menuPanel, panelBorder)
     }
 
     /** A 1px hairline divider, in the design's white-alpha. */
@@ -212,28 +236,23 @@ object SnellUi {
         when (style) {
             SnellBtn.Primary -> {
                 if (enabled) canvas.fill(r.left + 2, r.bottom, r.width - 4, 2, SnellPalette.withAlpha(SnellPalette.accent, 0x55)) // glow
-                val top = if (enabled) (if (hover) lighten(SnellPalette.accent, 0.10f) else SnellPalette.accent) else darken(SnellPalette.accent, 0.5f)
-                val bot = if (enabled) SnellPalette.accentMid else darken(SnellPalette.accentMid, 0.5f)
-                canvas.gradientV(r.left, r.top, r.width, r.height, top, bot)
-                canvas.border(r.left, r.top, r.width, r.height, lighten(SnellPalette.accent, 0.2f))
+                val face = if (!enabled) darken(SnellPalette.accent, 0.5f) else if (hover) lighten(SnellPalette.accent, 0.10f) else SnellPalette.accent
+                surface(canvas, r, face, lighten(SnellPalette.accent, 0.2f))
                 fg = if (enabled) SnellPalette.onAccent else SnellPalette.textDisabled
             }
             SnellBtn.Secondary -> {
-                canvas.fill(r.left, r.top, r.width, r.height, if (enabled && hover) rowFillHi else rowFill)
-                canvas.border(r.left, r.top, r.width, r.height, rowBorder)
+                surface(canvas, r, if (enabled && hover) rowFillHi else rowFill, rowBorder)
                 fg = if (enabled) SnellPalette.text else SnellPalette.textDisabled
             }
             SnellBtn.Ghost -> {
-                if (enabled && hover) canvas.fill(r.left, r.top, r.width, r.height, rowFill)
+                if (enabled && hover) surface(canvas, r, rowFill, null)
                 fg = if (enabled) SnellPalette.menuText3 else SnellPalette.textDisabled
             }
             SnellBtn.Danger -> {
-                canvas.fill(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(SnellPalette.danger, if (enabled && hover) 0x26 else 0x14))
-                canvas.border(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(SnellPalette.danger, 0x40))
+                surface(canvas, r, SnellPalette.withAlpha(SnellPalette.danger, if (enabled && hover) 0x26 else 0x14), SnellPalette.withAlpha(SnellPalette.danger, 0x40))
                 fg = if (enabled) SnellPalette.dangerSoft else SnellPalette.textDisabled
             }
         }
-        round(canvas, r, SnellPalette.menuPanel)
         val ty = r.top + (r.height - canvas.lineHeight) / 2 + 1
         if (iconName != null) {
             val isz = (r.height - 10).coerceIn(9, 14)
@@ -253,16 +272,12 @@ object SnellUi {
             hover -> rowFillHi
             else -> rowFill
         }
-        canvas.fill(r.left, r.top, r.width, r.height, fill)
-        canvas.border(r.left, r.top, r.width, r.height, if (danger && hover) SnellPalette.withAlpha(SnellPalette.danger, 0x55) else rowBorder)
-        round(canvas, r, SnellPalette.menuPanel)
+        surface(canvas, r, fill, if (danger && hover) SnellPalette.withAlpha(SnellPalette.danger, 0x55) else rowBorder)
     }
 
     /** Rounded icon tile (world/server/nav glyph holder); caller draws the glyph/initial centred. */
     fun iconTile(canvas: EditorCanvas, r: Rect, bg: Int, border: Int? = null) {
-        canvas.fill(r.left, r.top, r.width, r.height, bg)
-        if (border != null) canvas.border(r.left, r.top, r.width, r.height, border)
-        round(canvas, r, SnellPalette.menuPanel)
+        surface(canvas, r, bg, border)
     }
 
     /**
@@ -271,9 +286,7 @@ object SnellUi {
      * icon-tile rect.
      */
     fun navButton(canvas: EditorCanvas, r: Rect, tileColor: Int, title: String, subtitle: String, hover: Boolean, accent: Boolean = true): Rect {
-        canvas.fill(r.left, r.top, r.width, r.height, if (hover) (if (accent) SnellPalette.accentSubtle else rowFillHi) else rowFill)
-        canvas.border(r.left, r.top, r.width, r.height, if (hover && accent) SnellPalette.withAlpha(SnellPalette.accent, 0x66) else rowBorder)
-        round(canvas, r, SnellPalette.menuPanel)
+        surface(canvas, r, if (hover) (if (accent) SnellPalette.accentSubtle else rowFillHi) else rowFill, if (hover && accent) SnellPalette.withAlpha(SnellPalette.accent, 0x66) else rowBorder)
         val tile = r.height - 12
         val tileRect = Rect(r.left + 7, r.top + (r.height - tile) / 2, tile, tile)
         iconTile(canvas, tileRect, SnellPalette.withAlpha(tileColor, 0x22), SnellPalette.withAlpha(tileColor, 0x55))
@@ -311,8 +324,7 @@ object SnellUi {
     fun badge(canvas: EditorCanvas, x: Int, y: Int, text: String, bg: Int, fg: Int = WHITE): Int {
         val w = canvas.textWidth(text) + 10
         val h = canvas.lineHeight + 3
-        canvas.fill(x, y, w, h, bg)
-        round(canvas, Rect(x, y, w, h), SnellPalette.menuPanel)
+        surfaceSm(canvas, Rect(x, y, w, h), bg, null)
         canvas.drawText(x + 5, y + (h - canvas.lineHeight) / 2, text, fg)
         return w
     }
@@ -335,9 +347,7 @@ object SnellUi {
 
     /** The gold wallet pill (top-right crown balance): gold-tinted chrome, coin glyph + mono [value]. */
     fun walletPill(canvas: EditorCanvas, r: Rect, value: String, hover: Boolean = false) {
-        canvas.fill(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x26 else 0x1A))
-        canvas.border(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x73 else 0x52))
-        round(canvas, r, SnellPalette.menuPanel)
+        capsule(canvas, r, SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x26 else 0x1A), SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x73 else 0x52))
         icon(canvas, "wallet", r.left + 10, r.top + r.height / 2, 11, SnellPalette.gold)
         canvas.drawMono(r.left + 18, r.top + (r.height - canvas.lineHeight) / 2, value, SnellPalette.gold)
     }
@@ -355,14 +365,11 @@ object SnellUi {
         // glow (fake box-shadow): offset translucent fills beneath the card
         canvas.fill(r.left + 4, r.bottom, r.width - 8, 4, SnellPalette.withAlpha(brand, 0x33))
         canvas.fill(r.left + 8, r.bottom + 2, r.width - 16, 3, SnellPalette.withAlpha(brand, 0x1E))
-        // gradient bg (≈100°): brighter on hover
-        gradientHApprox(canvas, r, SnellPalette.withAlpha(brand, if (hover) 0x52 else 0x42), SnellPalette.withAlpha(brand, 0x12))
-        canvas.border(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(brand, if (hover) 0x8C else 0x73))
-        round(canvas, r, SnellPalette.menuPanel)
-        // solid icon tile with a faint glow ring
+        // rounded discord-tinted card (flat fill; a 9-slice sprite can't carry the 100° gradient). Brighter on hover.
+        surface(canvas, r, SnellPalette.withAlpha(brand, if (hover) 0x3A else 0x2A), SnellPalette.withAlpha(brand, if (hover) 0x8C else 0x73))
+        // solid brand icon tile
         val tile = r.height - 14
         val tileRect = Rect(r.left + 8, r.top + (r.height - tile) / 2, tile, tile)
-        canvas.fill(tileRect.left - 1, tileRect.top - 1, tileRect.width + 2, tileRect.height + 2, SnellPalette.withAlpha(brand, 0x55))
         iconTile(canvas, tileRect, brand, lighten(brand, 0.2f))
         // title + REWARDS badge over a muted subtitle
         val tx = tileRect.right + 10
@@ -381,13 +388,10 @@ object SnellUi {
     /** A 2-state pill toggle: cyan track + white knob when on, neutral inset when off. */
     fun switch(canvas: EditorCanvas, r: Rect, on: Boolean) {
         val track = if (on) SnellPalette.accent else SnellPalette.menuInset
-        canvas.fill(r.left, r.top, r.width, r.height, track)
-        canvas.border(r.left, r.top, r.width, r.height, if (on) lighten(SnellPalette.accent, 0.2f) else rowBorder)
-        round(canvas, r, SnellPalette.menuPanel)
+        capsule(canvas, r, track, if (on) lighten(SnellPalette.accent, 0.2f) else rowBorder)
         val k = r.height - 4
         val kx = if (on) r.right - k - 2 else r.left + 2
-        canvas.fill(kx, r.top + 2, k, k, if (on) WHITE else SnellPalette.text3)
-        round(canvas, Rect(kx, r.top + 2, k, k), track)
+        capsule(canvas, Rect(kx, r.top + 2, k, k), if (on) WHITE else SnellPalette.text3)
     }
 
     /** A thin track + cyan fill to [fraction] + white knob, with [valueText] right-aligned in accent. */
@@ -420,17 +424,14 @@ object SnellUi {
             hover -> rowFillHi
             else -> rowFill
         }
-        canvas.fill(r.left, r.top, r.width, r.height, bg)
-        canvas.border(r.left, r.top, r.width, r.height, if (selected || hover) SnellPalette.withAlpha(SnellPalette.accent, if (selected) 0x66 else 0x40) else rowBorder)
-        if (selected) canvas.fill(r.left, r.top, 3, r.height, SnellPalette.accent)
-        round(canvas, r, under)
+        surface(canvas, r, bg, if (selected || hover) SnellPalette.withAlpha(SnellPalette.accent, if (selected) 0x66 else 0x40) else rowBorder)
+        if (selected) canvas.fill(r.left, r.top + 2, 3, r.height - 4, SnellPalette.accent)
     }
 
     /** A category-nav item (Options left rail): active gets a cyan left bar + fill. Caller draws icon+label. */
     fun categoryItem(canvas: EditorCanvas, r: Rect, active: Boolean, hover: Boolean) {
-        if (active || hover) canvas.fill(r.left, r.top, r.width, r.height, if (active) rowFillHi else rowFill)
+        if (active || hover) surface(canvas, r, if (active) rowFillHi else rowFill, null)
         if (active) canvas.fill(r.left, r.top + (r.height - 14) / 2, 3, 14, SnellPalette.accent)
-        if (active || hover) round(canvas, r, SnellPalette.menuPanel)
     }
 
     /** A status pill (rounded, tinted background + coloured dot + label), like the launcher's StatusPill. */
@@ -445,9 +446,7 @@ object SnellUi {
         val w = canvas.textWidth(text) + 16
         val h = canvas.lineHeight + 6
         val r = Rect(x, y, w, h)
-        canvas.fill(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(c, 0x22))
-        canvas.border(r.left, r.top, r.width, r.height, SnellPalette.withAlpha(c, 0x55))
-        round(canvas, r, SnellPalette.menuPanel)
+        capsule(canvas, r, SnellPalette.withAlpha(c, 0x22), SnellPalette.withAlpha(c, 0x55))
         dot(canvas, r.left + 8, r.top + h / 2, 4, c)
         canvas.drawText(r.left + 13, r.top + (h - canvas.lineHeight) / 2, text, c)
     }
@@ -456,27 +455,20 @@ object SnellUi {
     fun chip(canvas: EditorCanvas, x: Int, y: Int, text: String, color: Int): Int {
         val w = canvas.textWidth(text) + 10
         val h = canvas.lineHeight + 4
-        canvas.fill(x, y, w, h, SnellPalette.withAlpha(color, 0x22))
-        canvas.border(x, y, w, h, SnellPalette.withAlpha(color, 0x55))
-        round(canvas, Rect(x, y, w, h), SnellPalette.menuPanel)
+        surfaceSm(canvas, Rect(x, y, w, h), SnellPalette.withAlpha(color, 0x22), SnellPalette.withAlpha(color, 0x55))
         canvas.drawText(x + 5, y + (h - canvas.lineHeight) / 2, text, color)
         return w
     }
 
     /** A keybinding cap (mono-ish boxed key). */
     fun keyCap(canvas: EditorCanvas, r: Rect, text: String) {
-        canvas.fill(r.left, r.bottom - 1, r.width, 1, shadow) // tactile bottom shadow
-        canvas.fill(r.left, r.top, r.width, r.height - 1, rowFillHi)
-        canvas.border(r.left, r.top, r.width, r.height, rowBorder)
-        round(canvas, r, SnellPalette.menuPanel)
+        surfaceSm(canvas, r, rowFillHi, rowBorder)
         canvas.drawMono(r.left + (r.width - canvas.monoWidth(text)) / 2, r.top + (r.height - canvas.lineHeight) / 2, text, SnellPalette.text2)
     }
 
     /** Text input chrome: inset field, accent border when focused, placeholder/caret. */
     fun textField(canvas: EditorCanvas, r: Rect, text: String, focused: Boolean, placeholder: String = "") {
-        canvas.fill(r.left, r.top, r.width, r.height, SnellPalette.menuInset)
-        canvas.border(r.left, r.top, r.width, r.height, if (focused) SnellPalette.accent else rowBorder)
-        round(canvas, r, SnellPalette.menuPanel)
+        surface(canvas, r, SnellPalette.menuInset, if (focused) SnellPalette.accent else rowBorder)
         val ty = r.top + (r.height - canvas.lineHeight) / 2 + 1
         if (text.isEmpty() && !focused) {
             canvas.drawText(r.left + 7, ty, ellipsize(canvas, placeholder, r.width - 14), SnellPalette.menuText3)
