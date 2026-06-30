@@ -67,6 +67,7 @@ class EditorPreviewRenderTest {
         override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {} // HUD editor preview uses no icons
         override fun iconWidth(glyph: Char) = 8
         override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {}
+        override fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int) {} // HUD editor preview draws no menu sprites
         override fun drawMono(x: Int, y: Int, text: String, color: Int) = drawText(x, y, text, color)
         override fun monoWidth(text: String) = textWidth(text)
         override fun drawDisplay(x: Int, y: Int, text: String, color: Int) = drawText(x, y, text, color) // HUD editor preview draws no wordmark

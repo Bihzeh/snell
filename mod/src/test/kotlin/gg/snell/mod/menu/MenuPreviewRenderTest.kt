@@ -70,6 +70,19 @@ class MenuPreviewRenderTest {
             g.drawImage(img, x, y, w, h, null)
         }
 
+        override fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int) {
+            val p = id.split(":", limit = 2); if (p.size != 2) return
+            val res = "assets/${p[0]}/textures/gui/sprites/${p[1]}.png"
+            val img = javaClass.classLoader.getResourceAsStream(res)?.use { ImageIO.read(it) } ?: return
+            // white master × ARGB tint (mirrors the in-game GUI shader); stretch-draw (9-slice TODO in preview)
+            val tinted = BufferedImage(img.width, img.height, BufferedImage.TYPE_INT_ARGB)
+            tinted.createGraphics().apply {
+                drawImage(img, 0, 0, null)
+                composite = AlphaComposite.SrcAtop; color = Color(tint, true); fillRect(0, 0, img.width, img.height); dispose()
+            }
+            g.drawImage(tinted, x, y, w, h, null)
+        }
+
         private val monoFont: Font? = javaClass.classLoader.getResourceAsStream("assets/snell/font/geist-mono.ttf")
             ?.use { Font.createFont(Font.TRUETYPE_FONT, it).deriveFont(9f) }
 

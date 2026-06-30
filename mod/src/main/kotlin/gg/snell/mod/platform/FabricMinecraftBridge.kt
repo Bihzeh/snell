@@ -19,6 +19,7 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.screens.PauseScreen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
@@ -250,6 +251,13 @@ internal class EditorExtractorCanvas(
         val p = id.split(":", limit = 2)
         if (p.size != 2) return
         extractor.blit(Identifier.fromNamespaceAndPath(p[0], p[1]), x, y, w, h, 0f, 0f, 1f, 1f)
+    }
+
+    override fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int) {
+        val p = id.split(":", limit = 2)
+        if (p.size != 2) return
+        // GUI atlas sprite; white-master × ARGB tint, 9-slice/stretch chosen by the sprite's mcmeta.
+        extractor.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath(p[0], p[1]), x, y, w, h, tint)
     }
 
     override fun drawDisplay(x: Int, y: Int, text: String, color: Int) {

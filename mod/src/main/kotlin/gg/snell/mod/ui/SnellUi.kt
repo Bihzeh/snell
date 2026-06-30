@@ -130,12 +130,10 @@ object SnellUi {
 
     /** Draw a Tabler [name] icon centred at ([cx],[cy]), [size] px tall, tinted [color]. Unknown name = nothing. */
     fun icon(canvas: EditorCanvas, name: String, cx: Int, cy: Int, size: Int, color: Int) {
-        val ch = ICONS[name] ?: return
-        val scale = size / ICON_BASE
-        val w = canvas.iconWidth(ch) * scale // centre on the glyph's real advance, not the box size
-        val px = (cx - w / 2f).toInt()
-        val py = (cy - size / 2f + size * ICON_V_NUDGE).toInt()
-        canvas.withScale(scale, px, py) { canvas.drawIcon(ch, 0, 0, color) }
+        // White-master sprite drawn as a centred square -> exact vertical centring, no font-glyph
+        // baseline nudge (that nudge was the "icon floating at the top of the tile" bug). Tinted [color]
+        // by the GUI shader; an unknown name simply blits nothing.
+        canvas.sprite("snell:icon/$name", cx - size / 2, cy - size / 2, size, size, color)
     }
 
     private const val SLIPSTREAM_TEX = "snell:textures/gui/snell_mark.png"

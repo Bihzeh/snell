@@ -75,4 +75,11 @@ interface EditorCanvas : HudCanvas {
     fun drawDisplay(x: Int, y: Int, text: String, color: Int)
     /** Width of [text] in the display font at its native size (for centring + manual letter-spacing). */
     fun displayWidth(text: String): Int
+
+    /**
+     * Draw a GUI-atlas sprite ([id] = "ns:path" under `assets/ns/textures/gui/sprites/path.png`) into
+     * the box, multiplied by ARGB [tint] (white-master × tint = the shape/icon in any colour). Nine-slice
+     * / tile / stretch is chosen by the sprite's `.png.mcmeta` (`gui.scaling`); no mcmeta = stretch.
+     */
+    fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int = 0xFFFFFFFF.toInt())
 }
