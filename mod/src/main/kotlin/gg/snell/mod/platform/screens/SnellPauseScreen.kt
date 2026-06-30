@@ -15,9 +15,6 @@ import net.minecraft.network.chat.Component
  */
 class SnellPauseScreen : SnellMenuScreen(Component.literal("Paused")) {
 
-    // Always over the live world → flat scrim, never the title panorama.
-    override val wantsPanorama: Boolean get() = false
-
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
         PauseRenderer.render(canvas, width, height, mouseX, mouseY, worldName())
 

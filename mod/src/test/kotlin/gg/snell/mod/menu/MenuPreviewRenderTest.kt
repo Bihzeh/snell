@@ -119,7 +119,7 @@ class MenuPreviewRenderTest {
     @Test fun `render title screen`() {
         val w = 640; val h = 360 // ≈ a real in-game GUI width (so the command column hits its 280px clamp)
         val (img, canvas) = frame(w, h)
-        SnellUi.backdrop(canvas, w, h); SnellUi.menuScrims(canvas, w, h) // stands in for the live blurred panorama
+        SnellUi.backdrop(canvas, w, h) // painted dusk — exactly what ships in-game
         val sp = TitleLayout.navButtons(w, h).first { it.id == "singleplayer" }.rect
         TitleRenderer.render(
             canvas, w, h, sp.left + sp.width / 2, sp.top + sp.height / 2,
@@ -141,7 +141,7 @@ class MenuPreviewRenderTest {
     @Test fun `render world picker`() {
         val w = 520; val h = 360
         val (img, canvas) = worldFrame(w, h)
-        SnellUi.backdrop(canvas, w, h); SnellUi.menuScrims(canvas, w, h)
+        SnellUi.backdrop(canvas, w, h)
         val rows = listOf(
             WorldRow("New World", "New World", "Survival", "1.21 · 2 minutes ago", "2.1 GB"),
             WorldRow("Hardcore Attempt 4", "Hardcore", "Hardcore", "1.21 · yesterday", "880 MB"),
@@ -156,7 +156,7 @@ class MenuPreviewRenderTest {
     @Test fun `render server picker`() {
         val w = 520; val h = 360
         val (img, canvas) = worldFrame(w, h)
-        SnellUi.backdrop(canvas, w, h); SnellUi.menuScrims(canvas, w, h)
+        SnellUi.backdrop(canvas, w, h)
         val rows = listOf(
             ServerRow("Hypixel", "mc.hypixel.net", "Bedwars · SkyBlock · 30+ minigames", "84231", 23, ServerStatus.Online),
             ServerRow("CubeCraft", "play.cubecraft.net", "Lucky Islands · EggWars", "12044", 41, ServerStatus.Online),
@@ -171,7 +171,7 @@ class MenuPreviewRenderTest {
     @Test fun `render options screen`() {
         val w = 520; val h = 360
         val (img, canvas) = frame(w, h)
-        SnellUi.backdrop(canvas, w, h); SnellUi.menuScrims(canvas, w, h)
+        SnellUi.backdrop(canvas, w, h)
         val entries = listOf(
             OptionEntry.Section("Rendering"),
             OptionEntry.Item(OptionItem("rd", "Render Distance", OptionKind.Slider, "16 chunks", fraction = 0.45f, description = "Chunks loaded around you")),

@@ -178,22 +178,6 @@ object SnellUi {
     fun scrim(canvas: EditorCanvas, w: Int, h: Int) =
         canvas.fill(0, 0, w, h, SnellPalette.withAlpha(SnellPalette.menuBase, 0xCC))
 
-    private val night = 0xFF0B0A12.toInt() // the mockup's rgba(11,10,18) scrim base
-
-    /**
-     * A light scrim over the live blurred panorama (the scene must show through). Deliberately MUCH
-     * lighter than the mockup's CSS: the mockup darkens a *bright* dusk still that it also brightens
-     * (`brightness(0.62)`), but the live 26.2 title cubemap is already dim and we can't brighten it —
-     * so stacking the mockup's 0.45/0.68 scrims crushed it to near-black. Two bands only: a gentle top
-     * fade for the wordmark/chips, a near-clear middle so the scene reads, and a heavier bottom so the
-     * translucent command cards / what's-new still have contrast.
-     */
-    fun menuScrims(canvas: EditorCanvas, w: Int, h: Int) {
-        val m = (h * 0.40f).toInt()
-        canvas.gradientV(0, 0, w, m, SnellPalette.withAlpha(night, 0x3A), SnellPalette.withAlpha(night, 0x08))
-        canvas.gradientV(0, m, w, h - m, SnellPalette.withAlpha(night, 0x08), SnellPalette.withAlpha(SnellPalette.menuBase, 0xAE))
-    }
-
     /**
      * Flat scrim over the live world (pause / options-from-pause). The mockup blurs the world too, but
      * blur can no-op on some GPU paths, so the alpha is kept heavy enough (~0x9E) to keep the world
