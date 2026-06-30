@@ -1,10 +1,15 @@
 package gg.snell.mod.platform.screens
 
-import gg.snell.mod.menu.TitleLayout
-import gg.snell.mod.menu.TitleRenderer
+import gg.snell.mod.menu.TitleData
+import gg.snell.mod.menu.TitleView
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.platform.SnellMenuScreen
 import gg.snell.mod.platform.SnellMenus
+import gg.snell.mod.ui.node.Layout
+import gg.snell.mod.ui.node.Node
+import gg.snell.mod.ui.node.asMetrics
+import gg.snell.mod.ui.node.hit
+import gg.snell.mod.ui.node.render
 import net.minecraft.client.multiplayer.ServerList
 import net.minecraft.network.chat.Component
 
@@ -37,15 +42,23 @@ class SnellTitleScreen : SnellMenuScreen(Component.literal("Snell")) {
         }
     }
 
-    override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        TitleRenderer.render(
-            canvas, width, height, mouseX, mouseY,
-            modVersion = SnellMenus.modVersion, mcVersion = SnellMenus.mcVersion,
-            username = mc.user.name, statusLabel = "Online", crowns = "0",
-            singleplayerSub = singleplayerSub, multiplayerSub = multiplayerSub,
-        )
+    private var laid: Node? = null
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = TitleLayout.hit(width, height, mouseX, mouseY)
+    private fun data() = TitleData(
+        modVersion = SnellMenus.modVersion, mcVersion = SnellMenus.mcVersion,
+        username = mc.user.name, status = "Online", crowns = "0",
+        singleplayerSub = singleplayerSub, multiplayerSub = multiplayerSub,
+    )
+
+    override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) {
+        val t = TitleView.build(data())
+        Layout.layout(t, width, height, canvas.asMetrics())
+        t.render(canvas, mouseX, mouseY)
+        laid = t
+    }
+
+    // Hit-test the tree laid out by the last draw() (the render frame precedes any click).
+    override fun hitId(mouseX: Int, mouseY: Int): String? = laid?.hit(mouseX, mouseY)
 
     override fun onActivate(id: String) {
         when (id) {

@@ -1,42 +1,51 @@
 package gg.snell.mod.menu
 
+import gg.snell.mod.ui.node.Layout
+import gg.snell.mod.ui.node.Metrics
+import gg.snell.mod.ui.node.find
+import gg.snell.mod.ui.node.hit
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Pure-layout regression for the title + pause screens (no rendering). */
+/** Pure-layout regression for the title (node tree) + pause screens (no rendering). */
 class MenuLayoutTest {
     private val w = 480
     private val h = 270
 
-    @Test fun `title nav + foot carry their ids and stack`() {
-        val nav = TitleLayout.navButtons(w, h)
-        val foot = TitleLayout.footRow(w, h)
-        assertEquals(TitleLayout.NAV_IDS, nav.map { it.id })
-        assertEquals(TitleLayout.FOOT_IDS, foot.map { it.id })
-        for (i in 1 until nav.size) assertTrue(nav[i].rect.top >= nav[i - 1].rect.bottom, "nav stacked: ${nav[i].id}")
-        assertTrue(foot.first().rect.top >= nav.last().rect.bottom, "foot below nav")
+    private object FixedMetrics : Metrics {
+        override fun textWidth(s: String) = s.length * 6
+        override fun monoWidth(s: String) = s.length * 6
+        override fun displayWidth(s: String) = s.length * 40
+        override val lineHeight = 9
     }
 
-    @Test fun `title featured discord card is taller and its link hit-maps to discord`() {
-        val nav = TitleLayout.navButtons(w, h)
-        val discord = nav.first { it.id == "discord" }.rect
-        val sp = nav.first { it.id == "singleplayer" }.rect
-        assertEquals(46, discord.height, "featured card height = FEAT_H")
-        assertTrue(discord.height > sp.height, "featured card taller than the plain nav rows")
-        val link = TitleLayout.linkButton(w, h)
-        assertTrue(
-            link.left >= discord.left && link.right <= discord.right && link.top >= discord.top && link.bottom <= discord.bottom,
-            "link CTA fully inside the discord card",
-        )
-        assertEquals("discord", TitleLayout.hit(w, h, link.left + link.width / 2, link.top + link.height / 2))
+    private fun titleTree() = TitleView.build(TitleData()).also { Layout.layout(it, w, h, FixedMetrics) }
+
+    @Test fun `title nav rows + foot carry ids and stack`() {
+        val t = titleTree()
+        val discord = t.find("discord")!!.rect
+        val sp = t.find("singleplayer")!!.rect
+        val mp = t.find("multiplayer")!!.rect
+        assertTrue(sp.top >= discord.bottom, "singleplayer below discord")
+        assertTrue(mp.top >= sp.bottom, "multiplayer below singleplayer")
+        assertTrue(t.find("options")!!.rect.top >= mp.bottom, "foot below nav")
+        assertNotNull(t.find("quit"))
     }
 
-    @Test fun `title hit maps a nav row and misses the empty corner`() {
-        val sp = TitleLayout.navButtons(w, h).first { it.id == "singleplayer" }.rect
-        assertEquals("singleplayer", TitleLayout.hit(w, h, sp.left + 2, sp.top + 2))
-        assertNull(TitleLayout.hit(w, h, w - 2, h - 2))
+    @Test fun `title featured discord card is taller than the plain nav rows`() {
+        val t = titleTree()
+        assertEquals(46, t.find("discord")!!.rect.height, "featured card height")
+        assertTrue(t.find("discord")!!.rect.height > t.find("singleplayer")!!.rect.height)
+    }
+
+    @Test fun `title hit maps a nav row and misses the empty centre`() {
+        val t = titleTree()
+        val sp = t.find("singleplayer")!!.rect
+        assertEquals("singleplayer", t.hit(sp.left + 2, sp.top + 2))
+        assertNull(t.hit(w / 2, h / 2)) // empty middle
     }
 
     @Test fun `pause controls carry their ids and fit the card`() {

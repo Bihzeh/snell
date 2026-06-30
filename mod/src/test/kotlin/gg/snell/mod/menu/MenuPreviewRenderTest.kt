@@ -3,6 +3,10 @@ package gg.snell.mod.menu
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.platform.TextRun
 import gg.snell.mod.ui.SnellUi
+import gg.snell.mod.ui.node.Layout
+import gg.snell.mod.ui.node.asMetrics
+import gg.snell.mod.ui.node.find
+import gg.snell.mod.ui.node.render
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Font
@@ -133,12 +137,14 @@ class MenuPreviewRenderTest {
         val w = 640; val h = 360 // ≈ a real in-game GUI width (so the command column hits its 280px clamp)
         val (img, canvas) = frame(w, h)
         SnellUi.backdrop(canvas, w, h) // painted dusk — exactly what ships in-game
-        val sp = TitleLayout.navButtons(w, h).first { it.id == "singleplayer" }.rect
-        TitleRenderer.render(
-            canvas, w, h, sp.left + sp.width / 2, sp.top + sp.height / 2,
-            modVersion = "1.4.0", mcVersion = "26.2", username = "SnellQueen", statusLabel = "Online",
+        val d = TitleData(
+            modVersion = "1.4.0", mcVersion = "26.2", username = "SnellQueen", status = "Online",
             crowns = "2,450", singleplayerSub = "5 worlds · last played just now", multiplayerSub = "8 servers",
         )
+        val t = TitleView.build(d)
+        Layout.layout(t, w, h, canvas.asMetrics())
+        val sp = t.find("singleplayer")!!.rect
+        t.render(canvas, sp.left + sp.width / 2, sp.top + sp.height / 2)
         assertTrue(write(img, "01-title.png").length() > 0)
     }
 
