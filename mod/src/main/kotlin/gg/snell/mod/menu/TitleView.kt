@@ -87,12 +87,12 @@ object TitleView {
                     // against the known r.width (robust — avoids starving a nested flex child).
                     width = Len.Flex(), height = Len.Fixed(24), anchor = Anchor.Center,
                     paint = { c, r, _, _ ->
-                        val bw = c.textWidth("REWARDS") + 12
-                        val titleMax = (r.width - bw - 6).coerceAtLeast(10)
-                        val title = SnellUi.ellipsize(c, "Link your Discord", titleMax)
-                        c.drawText(r.left, r.top + 1, title, SnellPalette.text)
-                        SnellUi.badge(c, r.left + c.textWidth(title) + 6, r.top, "REWARDS", brand)
-                        c.drawText(r.left, r.top + 1 + c.lineHeight + 3, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", r.width), SnellPalette.text2)
+                        // Line 1: the title gets the full width (priority — never collapses to "…").
+                        c.drawText(r.left, r.top + 1, SnellUi.ellipsize(c, "Link your Discord", r.width), SnellPalette.text)
+                        // Line 2: REWARDS badge then the subtitle in the remaining width.
+                        val by = r.top + 1 + c.lineHeight + 3
+                        val bw = SnellUi.badge(c, r.left, by - 1, "REWARDS", brand)
+                        c.drawText(r.left + bw + 6, by, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", (r.width - bw - 6).coerceAtLeast(0)), SnellPalette.text2)
                     },
                 ),
                 Node( // Link CTA
