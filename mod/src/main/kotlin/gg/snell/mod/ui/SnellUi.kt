@@ -113,7 +113,10 @@ object SnellUi {
 
     // ---- Tabler icons (bundled subset, drawn from the always-on `snell:icons` font) ------------
     private const val ICON_BASE = 10f // matches the icons.json font size
-    private const val ICON_V_NUDGE = -0.14f // MC draws the glyph low in its line; raise it to centre
+    // Vertical centring of the glyph in its tile. The icon ink sits in the UPPER part of its text box,
+    // so a small DOWNWARD nudge (positive) is needed to optically centre it; the old -0.14 raised it to
+    // the top edge (the "floating at the top of the box" bug). Tune in ~0.02 steps if it reads off.
+    private const val ICON_V_NUDGE = 0.10f
     private val ICONS: Map<String, Char> = mapOf(
         "discord" to '', "singleplayer" to '', "multiplayer" to '', "options" to '',
         "quit" to '', "wallet" to '', "cosmetics" to '', "friends" to '',
