@@ -1,5 +1,5 @@
 {
   "providers": [
-    { "type": "ttf", "file": "snell:geist.ttf", "size": 62.0, "oversample": 2.0, "shift": [0.0, 0.0] }
+    { "type": "ttf", "file": "snell:geist.ttf", "size": 62.0, "oversample": 4.0, "shift": [0.0, 0.0] }
   ]
 }

@@ -258,11 +258,25 @@ internal class EditorExtractorCanvas(
 
     override fun displayWidth(text: String): Int = font.width(displayComponent(text))
 
+    // Menus ALWAYS render Geist via the always-on `snell:sans` font (same mechanism as the SNELL
+    // wordmark / mono), independent of the toggleable Geist resource pack — so menu body text can never
+    // silently fall back to Minecraft's blocky default font when the pack isn't selected. Measure with
+    // the same font so centring/ellipsize stay consistent.
+    override fun drawText(x: Int, y: Int, text: String, color: Int) {
+        extractor.text(font, sansComponent(text), x, y, color, true)
+    }
+
+    override fun textWidth(text: String): Int = font.width(sansComponent(text))
+
+    private fun sansComponent(text: String): Component =
+        Component.literal(text).setStyle(Style.EMPTY.withFont(net.minecraft.network.chat.FontDescription.Resource(SANS_FONT)))
+
     private fun displayComponent(text: String): Component =
         Component.literal(text).setStyle(Style.EMPTY.withFont(net.minecraft.network.chat.FontDescription.Resource(DISPLAY_FONT)))
 
     private companion object {
         val ICONS_FONT = Identifier.fromNamespaceAndPath("snell", "icons")
         val DISPLAY_FONT = Identifier.fromNamespaceAndPath("snell", "display")
+        val SANS_FONT = Identifier.fromNamespaceAndPath("snell", "sans")
     }
 }
