@@ -41,9 +41,13 @@ object ScreenshotDriver {
         var idx = -1
         var waitFrames = 0
         var draining = 0
+        var scaled = false
         ClientTickEvents.END_CLIENT_TICK.register(
             ClientTickEvents.EndTick { mc ->
                 if (!mc.isGameLoadFinished) return@EndTick
+                // Capture at GUI scale 2 so the shots match a typical 1080p+ desktop (the command
+                // column hits its 280px width, not the small-scale 200px clamp).
+                if (!scaled) { scaled = true; runCatching { mc.options.guiScale().set(2); mc.resizeDisplay() } }
                 if (warmup > 0) { warmup--; return@EndTick }
                 SnellMenus.enabled = true
                 if (waitFrames > 0) {
