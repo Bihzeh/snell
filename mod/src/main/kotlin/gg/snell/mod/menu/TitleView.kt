@@ -82,24 +82,18 @@ object TitleView {
                         SnellUi.icon(c, "discord", r.left + r.width / 2, r.top + r.height / 2, r.width - 8, SnellUi.WHITE)
                     },
                 ),
-                Node( // middle: title+badge over subtitle, takes the leftover width
-                    width = Len.Flex(), height = Len.Auto, dir = Dir.Column, cross = Cross.Stretch, gap = 3,
-                    children = listOf(
-                        Node(
-                            dir = Dir.Row, height = Len.Fixed(13), gap = 6, cross = Cross.Center,
-                            children = listOf(
-                                Node(width = Len.Flex(), height = Len.Fixed(13), paint = { c, r, _, _ ->
-                                    c.drawText(r.left, r.top + 2, SnellUi.ellipsize(c, "Link your Discord", r.width), SnellPalette.text)
-                                }),
-                                Node(width = Len.Auto, height = Len.Fixed(13), measure = { m -> Size(m.textWidth("REWARDS") + 12, 13) }, paint = { c, r, _, _ ->
-                                    SnellUi.badge(c, r.left, r.top, "REWARDS", brand)
-                                }),
-                            ),
-                        ),
-                        Node(height = Len.Fixed(11), paint = { c, r, _, _ ->
-                            c.drawText(r.left, r.top + 1, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", r.width), SnellPalette.text2)
-                        }),
-                    ),
+                Node( // middle: title + REWARDS over subtitle. The engine sizes this to the leftover
+                    // width (icon + link are Fixed); the title/badge sub-layout is done in one paint
+                    // against the known r.width (robust — avoids starving a nested flex child).
+                    width = Len.Flex(), height = Len.Fixed(24), anchor = Anchor.Center,
+                    paint = { c, r, _, _ ->
+                        val bw = c.textWidth("REWARDS") + 12
+                        val titleMax = (r.width - bw - 6).coerceAtLeast(10)
+                        val title = SnellUi.ellipsize(c, "Link your Discord", titleMax)
+                        c.drawText(r.left, r.top + 1, title, SnellPalette.text)
+                        SnellUi.badge(c, r.left + c.textWidth(title) + 6, r.top, "REWARDS", brand)
+                        c.drawText(r.left, r.top + 1 + c.lineHeight + 3, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", r.width), SnellPalette.text2)
+                    },
                 ),
                 Node( // Link CTA
                     width = Len.Fixed(46), height = Len.Fixed(20), anchor = Anchor.Center,
