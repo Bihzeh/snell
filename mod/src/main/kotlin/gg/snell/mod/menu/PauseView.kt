@@ -75,8 +75,10 @@ object PauseView {
             SnellUi.iconTile(c, tile, SnellPalette.withAlpha(SnellPalette.accent, 0x22))
             SnellUi.icon(c, "quickswitch", tile.left + tile.width / 2, tile.top + tile.height / 2, t - 4, SnellPalette.accent)
             val tx = tile.right + 9
-            c.drawText(tx, r.top + 6, "Quick Switch", SnellPalette.text)
-            c.drawText(tx, r.top + 6 + c.lineHeight + 2, SnellUi.ellipsize(c, "Jump to another server or world", r.right - 14 - tx), SnellPalette.text2)
+            // Centre the two-line block against the icon tile (+2 optical nudge; MC text ink rides high).
+            val ty = r.top + (r.height - (c.lineHeight * 2 + 2)) / 2 + 2
+            c.drawText(tx, ty, "Quick Switch", SnellPalette.text)
+            c.drawText(tx, ty + c.lineHeight + 2, SnellUi.ellipsize(c, "Jump to another server or world", r.right - 14 - tx), SnellPalette.text2)
             SnellUi.icon(c, "chevron", r.right - 10, r.top + r.height / 2, 9, SnellPalette.menuText3)
         },
     )

@@ -92,10 +92,13 @@ object TitleView {
                     // against the known r.width (robust — avoids starving a nested flex child).
                     width = Len.Flex(), height = Len.Fixed(34), anchor = Anchor.Center,
                     paint = { c, r, _, _ ->
+                        // Centre the two-line block in the cell (+2 optical nudge; MC text ink rides high),
+                        // instead of top-drawing it (which left the cell bottom empty -> top-heavy).
+                        val ty = r.top + (r.height - (c.lineHeight * 2 + 3)) / 2 + 2
                         // Line 1: the title gets the full width (priority — never collapses to "…").
-                        c.drawText(r.left, r.top + 1, SnellUi.ellipsize(c, "Link your Discord", r.width), SnellPalette.text)
+                        c.drawText(r.left, ty, SnellUi.ellipsize(c, "Link your Discord", r.width), SnellPalette.text)
                         // Line 2: REWARDS badge then the subtitle in the remaining width.
-                        val by = r.top + 1 + c.lineHeight + 3
+                        val by = ty + c.lineHeight + 3
                         val bw = SnellUi.badge(c, r.left, by - 1, "REWARDS", brand)
                         c.drawText(r.left + bw + 6, by, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", (r.width - bw - 6).coerceAtLeast(0)), SnellPalette.text2)
                     },

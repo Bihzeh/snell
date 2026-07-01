@@ -291,7 +291,9 @@ object SnellUi {
         iconTile(canvas, tileRect, SnellPalette.withAlpha(tileColor, 0x22), SnellPalette.withAlpha(tileColor, 0x55))
         val tx = tileRect.right + 9
         val block = canvas.lineHeight * 2 + 2
-        val ty = r.top + (r.height - block) / 2
+        // MC text ink rides in the upper part of its line box, so a purely geometric centre reads
+        // top-heavy; nudge the two-line block down to optically centre it against the icon tile.
+        val ty = r.top + (r.height - block) / 2 + 2
         canvas.drawText(tx, ty, ellipsize(canvas, title, r.right - 22 - tx), SnellPalette.text)
         canvas.drawText(tx, ty + canvas.lineHeight + 2, ellipsize(canvas, subtitle, r.right - 22 - tx), SnellPalette.text2)
         chevronRight(canvas, r.right - 12, r.top + r.height / 2, 3, SnellPalette.menuText3)
