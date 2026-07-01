@@ -76,7 +76,7 @@ object TitleView {
             },
             children = listOf(
                 Node( // solid brand icon tile
-                    width = Len.Fixed(32), height = Len.Fixed(32), anchor = Anchor.CenterLeft,
+                    width = Len.Fixed(28), height = Len.Fixed(28), anchor = Anchor.CenterLeft,
                     paint = { c, r, _, _ ->
                         SnellUi.iconTile(c, r, brand, SnellUi.lighten(brand, 0.2f))
                         SnellUi.icon(c, "discord", r.left + r.width / 2, r.top + r.height / 2, r.width - 8, SnellUi.WHITE)
@@ -95,9 +95,12 @@ object TitleView {
                         c.drawText(r.left + bw + 6, by, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", (r.width - bw - 6).coerceAtLeast(0)), SnellPalette.text2)
                     },
                 ),
-                Node( // Link CTA
-                    width = Len.Fixed(46), height = Len.Fixed(20), anchor = Anchor.Center,
-                    paint = { c, r, mx, my -> SnellUi.solidButton(c, r, "Link", brand, SnellUi.WHITE, r.contains(mx, my), "chevron") },
+                Node( // compact Link CTA (chevron square) — keeps the title room in the narrow column
+                    width = Len.Fixed(26), height = Len.Fixed(22), anchor = Anchor.Center,
+                    paint = { c, r, mx, my ->
+                        SnellUi.surface(c, r, if (r.contains(mx, my)) SnellUi.lighten(brand, 0.12f) else brand, null)
+                        SnellUi.icon(c, "chevron", r.left + r.width / 2, r.top + r.height / 2, 11, SnellUi.WHITE)
+                    },
                 ),
             ),
         )
