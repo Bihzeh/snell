@@ -24,6 +24,16 @@ abstract class SnellMenuScreen(title: Component) : Screen(title) {
 
     protected val mc: Minecraft get() = Minecraft.getInstance()
 
+    // Dynamic scaling: lay the UI out in a fixed-height DESIGN space ([designH] tall, width flexing with
+    // the window aspect) and uniformly scale it to fill the viewport. This keeps the menu the same size
+    // proportionally at any resolution / GUI scale, instead of fixed GUI-px chrome that clusters small on
+    // big screens. Screens use [designW]/[designH] for layout; input is descaled back into design space.
+    protected open val designH: Int get() = 270
+    protected val viewScale: Float get() = (height.toFloat() / designH).coerceAtLeast(0.1f)
+    protected val designW: Int get() = (width / viewScale).toInt()
+    private fun dx(x: Int) = (x / viewScale).toInt()
+    private fun dy(y: Int) = (y / viewScale).toInt()
+
     protected abstract fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int)
     protected abstract fun hitId(mouseX: Int, mouseY: Int): String?
     protected abstract fun onActivate(id: String)
@@ -60,11 +70,14 @@ abstract class SnellMenuScreen(title: Component) : Screen(title) {
 
     override fun extractRenderState(extractor: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, deltaTicks: Float) {
         super.extractRenderState(extractor, mouseX, mouseY, deltaTicks)
-        draw(EditorExtractorCanvas(extractor, mc.font), mouseX, mouseY)
+        val canvas = EditorExtractorCanvas(extractor, mc.font)
+        // Scale the whole UI up from the design space to fill the viewport; the backdrop (drawn in
+        // extractBackground) stays full-screen. Mouse is descaled so hover in design space matches.
+        canvas.withScale(viewScale, 0, 0) { draw(canvas, dx(mouseX), dy(mouseY)) }
     }
 
     override fun mouseClicked(event: MouseButtonEvent, doubled: Boolean): Boolean {
-        val mx = event.x().toInt(); val my = event.y().toInt()
+        val mx = dx(event.x().toInt()); val my = dy(event.y().toInt())
         val id = hitId(mx, my)
         if (id != null) {
             if (doubled) onActivate2(id) else onActivate(id)
@@ -75,7 +88,7 @@ abstract class SnellMenuScreen(title: Component) : Screen(title) {
     }
 
     override fun mouseDragged(event: MouseButtonEvent, dragX: Double, dragY: Double): Boolean {
-        onDragTo(event.x().toInt(), event.y().toInt())
+        onDragTo(dx(event.x().toInt()), dy(event.y().toInt()))
         return super.mouseDragged(event, dragX, dragY)
     }
 

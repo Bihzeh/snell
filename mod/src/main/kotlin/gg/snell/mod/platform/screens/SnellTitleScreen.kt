@@ -52,7 +52,7 @@ class SnellTitleScreen : SnellMenuScreen(Component.literal("Snell")) {
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) {
         val t = TitleView.build(data())
-        Layout.layout(t, width, height, canvas.asMetrics())
+        Layout.layout(t, designW, designH, canvas.asMetrics())
         t.render(canvas, mouseX, mouseY)
         laid = t
     }

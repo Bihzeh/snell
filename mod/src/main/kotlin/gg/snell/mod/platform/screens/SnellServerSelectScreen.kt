@@ -35,12 +35,12 @@ class SnellServerSelectScreen(private val parent: Screen?) : SnellMenuScreen(Com
     }
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        ServerSelectRenderer.render(canvas, width, height, mouseX, mouseY, rows, selected, scrollY)
+        ServerSelectRenderer.render(canvas, designW, designH, mouseX, mouseY, rows, selected, scrollY)
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = ServerSelectLayout.hit(width, height, mouseX, mouseY)
+    override fun hitId(mouseX: Int, mouseY: Int): String? = ServerSelectLayout.hit(designW, designH, mouseX, mouseY)
 
     override fun onPress(mouseX: Int, mouseY: Int, doubled: Boolean): Boolean {
-        val i = ServerSelectLayout.rowAt(width, height, scrollY, rows.size, mouseX, mouseY)
+        val i = ServerSelectLayout.rowAt(designW, designH, scrollY, rows.size, mouseX, mouseY)
         if (i >= 0) {
             selected = i
             if (doubled) joinSelected()
@@ -59,7 +59,7 @@ class SnellServerSelectScreen(private val parent: Screen?) : SnellMenuScreen(Com
     }
 
     override fun onScroll(amount: Double) {
-        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, ServerSelectLayout.maxScroll(rows.size, width, height))
+        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, ServerSelectLayout.maxScroll(rows.size, designW, designH))
     }
 
     private fun joinSelected() {

@@ -36,13 +36,13 @@ class SnellOptionsScreen(
 
     private fun rebuild() {
         entries = OptionsAdapter.entries(mc.options, modules, category)
-        scrollY = scrollY.coerceIn(0, OptionsLayout.maxScroll(entries.size, width, height))
+        scrollY = scrollY.coerceIn(0, OptionsLayout.maxScroll(entries.size, designW, designH))
     }
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        OptionsRenderer.render(canvas, width, height, mouseX, mouseY, entries, category, scrollY)
+        OptionsRenderer.render(canvas, designW, designH, mouseX, mouseY, entries, category, scrollY)
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = OptionsLayout.hit(width, height, mouseX, mouseY)
+    override fun hitId(mouseX: Int, mouseY: Int): String? = OptionsLayout.hit(designW, designH, mouseX, mouseY)
 
     override fun onActivate(id: String) {
         when {
@@ -52,8 +52,8 @@ class SnellOptionsScreen(
     }
 
     override fun onPress(mouseX: Int, mouseY: Int, doubled: Boolean): Boolean {
-        for (i in OptionsLayout.visibleRange(entries.size, scrollY, width, height)) {
-            val rr = OptionsLayout.rowRect(i, scrollY, width, height)
+        for (i in OptionsLayout.visibleRange(entries.size, scrollY, designW, designH)) {
+            val rr = OptionsLayout.rowRect(i, scrollY, designW, designH)
             if (!rr.contains(mouseX, mouseY)) continue
             val e = entries[i]
             if (e is OptionEntry.Item) {
@@ -79,7 +79,7 @@ class SnellOptionsScreen(
     override fun onReleaseDrag() { sliderDrag = null }
 
     override fun onScroll(amount: Double) {
-        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, OptionsLayout.maxScroll(entries.size, width, height))
+        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, OptionsLayout.maxScroll(entries.size, designW, designH))
     }
 
     private fun applySlider(id: String, mouseX: Int, ctrl: Rect) {
@@ -90,7 +90,7 @@ class SnellOptionsScreen(
     private fun rowRectFor(id: String): Rect? {
         for (i in entries.indices) {
             val e = entries[i]
-            if (e is OptionEntry.Item && e.item.id == id) return OptionsLayout.rowRect(i, scrollY, width, height)
+            if (e is OptionEntry.Item && e.item.id == id) return OptionsLayout.rowRect(i, scrollY, designW, designH)
         }
         return null
     }

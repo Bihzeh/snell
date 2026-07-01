@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component
 class SnellPauseScreen : SnellMenuScreen(Component.literal("Paused")) {
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        PauseRenderer.render(canvas, width, height, mouseX, mouseY, worldName())
+        PauseRenderer.render(canvas, designW, designH, mouseX, mouseY, worldName())
 
     /** The real world/server name for the pause card header, with a safe fallback. */
     private fun worldName(): String = runCatching {
@@ -24,7 +24,7 @@ class SnellPauseScreen : SnellMenuScreen(Component.literal("Paused")) {
         else mc.currentServer?.name?.ifBlank { mc.currentServer?.ip ?: "" }?.ifBlank { "Multiplayer Server" } ?: "Multiplayer Server"
     }.getOrDefault(if (mc.hasSingleplayerServer()) "Singleplayer" else "Multiplayer Server")
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = PauseLayout.hit(width, height, mouseX, mouseY)
+    override fun hitId(mouseX: Int, mouseY: Int): String? = PauseLayout.hit(designW, designH, mouseX, mouseY)
 
     override fun onActivate(id: String) {
         when (id) {

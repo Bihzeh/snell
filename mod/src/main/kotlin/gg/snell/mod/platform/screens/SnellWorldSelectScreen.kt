@@ -29,12 +29,12 @@ class SnellWorldSelectScreen(private val parent: Screen?) : SnellMenuScreen(Comp
     }
 
     override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        WorldSelectRenderer.render(canvas, width, height, mouseX, mouseY, rows, selected, scrollY, "", false)
+        WorldSelectRenderer.render(canvas, designW, designH, mouseX, mouseY, rows, selected, scrollY, "", false)
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = WorldSelectLayout.hit(width, height, mouseX, mouseY)
+    override fun hitId(mouseX: Int, mouseY: Int): String? = WorldSelectLayout.hit(designW, designH, mouseX, mouseY)
 
     override fun onPress(mouseX: Int, mouseY: Int, doubled: Boolean): Boolean {
-        val i = WorldSelectLayout.rowAt(width, height, scrollY, rows.size, mouseX, mouseY)
+        val i = WorldSelectLayout.rowAt(designW, designH, scrollY, rows.size, mouseX, mouseY)
         if (i >= 0) {
             selected = i
             if (doubled) playSelected()
@@ -54,10 +54,10 @@ class SnellWorldSelectScreen(private val parent: Screen?) : SnellMenuScreen(Comp
     }
 
     override fun onScroll(amount: Double) {
-        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, WorldSelectLayout.maxScroll(rows.size, width, height))
+        scrollY = (scrollY - (amount * 16).toInt()).coerceIn(0, WorldSelectLayout.maxScroll(rows.size, designW, designH))
     }
 
-    private fun clampScroll() { scrollY = scrollY.coerceIn(0, WorldSelectLayout.maxScroll(rows.size, width, height)) }
+    private fun clampScroll() { scrollY = scrollY.coerceIn(0, WorldSelectLayout.maxScroll(rows.size, designW, designH)) }
 
     private fun playSelected() {
         rows.getOrNull(selected)?.let { WorldAdapter.play(mc, it.folder) { mc.setScreenAndShow(this) } }
