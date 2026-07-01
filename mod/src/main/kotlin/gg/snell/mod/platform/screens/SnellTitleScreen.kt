@@ -42,6 +42,10 @@ class SnellTitleScreen : SnellMenuScreen(Component.literal("Snell")) {
         }
     }
 
+    // Ported screens lay out in the mockup-faithful 810-tall design space (see SnellMenuScreen); the
+    // still-old World/Server/Options screens keep the base 270 until they are ported too.
+    override val designH: Int get() = 810
+
     private var laid: Node? = null
 
     private fun data() = TitleData(

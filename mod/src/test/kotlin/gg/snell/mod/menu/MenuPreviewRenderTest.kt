@@ -149,11 +149,13 @@ class MenuPreviewRenderTest {
     }
 
     @Test fun `render pause menu`() {
-        val w = 480; val h = 270
+        val w = 520; val h = 810 // the pause card's 810-tall design space
         val (img, canvas) = worldFrame(w, h)
         SnellUi.pauseScrim(canvas, w, h)
-        val opt = PauseLayout.controls(w, h).first { it.id == "options" }.rect
-        PauseRenderer.render(canvas, w, h, opt.left + opt.width / 2, opt.top + opt.height / 2, worldName = "Survival World")
+        val t = PauseView.build(PauseData("Survival World"))
+        Layout.layout(t, w, h, canvas.asMetrics())
+        val opt = t.find("options")!!.rect
+        t.render(canvas, opt.left + opt.width / 2, opt.top + opt.height / 2)
         assertTrue(write(img, "02-pause.png").length() > 0)
     }
 

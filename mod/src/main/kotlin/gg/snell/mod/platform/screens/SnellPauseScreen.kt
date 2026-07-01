@@ -1,22 +1,37 @@
 package gg.snell.mod.platform.screens
 
-import gg.snell.mod.menu.PauseLayout
-import gg.snell.mod.menu.PauseRenderer
+import gg.snell.mod.menu.PauseData
+import gg.snell.mod.menu.PauseView
 import gg.snell.mod.platform.EditorCanvas
 import gg.snell.mod.platform.SnellMenuScreen
+import gg.snell.mod.ui.node.Layout
+import gg.snell.mod.ui.node.Node
+import gg.snell.mod.ui.node.asMetrics
+import gg.snell.mod.ui.node.hit
+import gg.snell.mod.ui.node.render
 import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
 import net.minecraft.network.chat.Component
 
 /**
- * Bespoke pause menu. Renders the Snell card and delegates each action to the same vanilla call the
- * original PauseScreen makes (resume / options / advancements / statistics / save & quit). The
+ * Bespoke pause menu. Builds the [PauseView] node tree and delegates each action to the same vanilla
+ * call the original PauseScreen makes (resume / options / advancements / statistics / save & quit). The
  * Quick-Switch row and Open-to-LAN tile are styled placeholders for now. Esc resumes.
  */
 class SnellPauseScreen : SnellMenuScreen(Component.literal("Paused")) {
 
-    override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) =
-        PauseRenderer.render(canvas, designW, designH, mouseX, mouseY, worldName())
+    // Ported screens lay out in the mockup-faithful 810-tall design space (see SnellMenuScreen); the
+    // still-old World/Server/Options screens keep the base 270 until they are ported too.
+    override val designH: Int get() = 810
+
+    private var laid: Node? = null
+
+    override fun draw(canvas: EditorCanvas, mouseX: Int, mouseY: Int) {
+        val t = PauseView.build(PauseData(worldName()))
+        Layout.layout(t, designW, designH, canvas.asMetrics())
+        t.render(canvas, mouseX, mouseY)
+        laid = t
+    }
 
     /** The real world/server name for the pause card header, with a safe fallback. */
     private fun worldName(): String = runCatching {
@@ -24,7 +39,8 @@ class SnellPauseScreen : SnellMenuScreen(Component.literal("Paused")) {
         else mc.currentServer?.name?.ifBlank { mc.currentServer?.ip ?: "" }?.ifBlank { "Multiplayer Server" } ?: "Multiplayer Server"
     }.getOrDefault(if (mc.hasSingleplayerServer()) "Singleplayer" else "Multiplayer Server")
 
-    override fun hitId(mouseX: Int, mouseY: Int): String? = PauseLayout.hit(designW, designH, mouseX, mouseY)
+    // Hit-test the tree laid out by the last draw() (the render frame precedes any click).
+    override fun hitId(mouseX: Int, mouseY: Int): String? = laid?.hit(mouseX, mouseY)
 
     override fun onActivate(id: String) {
         when (id) {
