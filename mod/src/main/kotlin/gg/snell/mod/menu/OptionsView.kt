@@ -137,8 +137,11 @@ object OptionsView {
                     SnellUi.scrollbar(c, r.right - 8, r.top + CONTENT_PAD_Y, r.height - 2 * CONTENT_PAD_Y, contentHeight(s.entries.size), s.scrollY)
                 },
             ),
+            // Mask must cover a full row stride: a partially-scrolled last row can extend up to
+            // ROW_H below the inner viewport (arrangeLazy includes any intersecting row), which is
+            // deeper than the 22px content padding alone.
             Node(
-                anchor = Anchor.BottomLeft, width = Len.Flex(), height = Len.Fixed(CONTENT_PAD_Y),
+                anchor = Anchor.BottomLeft, width = Len.Flex(), height = Len.Fixed(ROW_H + ROW_GAP),
                 paint = { c, r, _, _ -> c.fill(r.left, r.top, r.width - 1, r.height - 1, SnellPalette.menuPanel) },
             ),
         ),

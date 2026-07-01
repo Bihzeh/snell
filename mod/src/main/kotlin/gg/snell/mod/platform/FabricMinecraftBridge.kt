@@ -260,8 +260,14 @@ internal class EditorExtractorCanvas(
         extractor.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath(p[0], p[1]), x, y, w, h, tint)
     }
 
+    // The 62px display TTF's ascent towers over Minecraft's 9px line cell: extractor.text anchors
+    // the BASELINE near the cell top, so the ink renders ~38 native px ABOVE the requested y
+    // (measured on the real CI shot: 11 design px high at pixelHeight 18 → 11×62/18 ≈ 38). Nudge the
+    // draw down so the ink's top lands at y, matching the AWT preview's ascent-anchored drawString.
+    private val displayInkRise = 38
+
     override fun drawDisplay(x: Int, y: Int, text: String, color: Int) {
-        extractor.text(font, displayComponent(text), x, y, color, true)
+        extractor.text(font, displayComponent(text), x, y + displayInkRise, color, true)
     }
 
     override fun displayWidth(text: String): Int = font.width(displayComponent(text))
