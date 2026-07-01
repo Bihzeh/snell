@@ -51,7 +51,7 @@ object PauseView {
             SnellUi.slipstream(c, r.left, r.top, 22)
             val tx = r.left + 30
             SnellUi.sectionLabel(c, tx, r.top, "Paused")
-            c.drawText(tx, r.top + c.lineHeight + 3, SnellUi.ellipsize(c, d.worldName, r.right - tx), SnellPalette.text)
+            c.drawText(tx, r.top + c.lineHeight + 4, SnellUi.ellipsize(c, d.worldName, r.right - tx), SnellPalette.text)
         },
     )
 
@@ -65,9 +65,10 @@ object PauseView {
         id = "quickswitch", height = Len.Fixed(42),
         paint = { c, r, mx, my ->
             val hover = r.contains(mx, my)
+            // Rest is the dimmer wash, hover the brighter one (they were swapped — hovering darkened).
             SnellUi.surface(
                 c, r,
-                if (hover) SnellPalette.withAlpha(SnellPalette.accent, 0x1C) else SnellPalette.accentSubtle,
+                if (hover) SnellPalette.accentSubtle else SnellPalette.withAlpha(SnellPalette.accent, 0x1C),
                 SnellPalette.withAlpha(SnellPalette.accent, if (hover) 0x66 else 0x40),
             )
             val t = r.height - 12
@@ -76,10 +77,11 @@ object PauseView {
             SnellUi.icon(c, "quickswitch", tile.left + tile.width / 2, tile.top + tile.height / 2, t - 4, SnellPalette.accent)
             val tx = tile.right + 9
             // Centre the two-line block against the icon tile (+2 optical nudge; MC text ink rides high).
-            val ty = r.top + (r.height - (c.lineHeight * 2 + 2)) / 2 + 2
+            val ty = r.top + (r.height - (c.lineHeight * 2 + 4)) / 2 + 2
             c.drawText(tx, ty, "Quick Switch", SnellPalette.text)
-            c.drawText(tx, ty + c.lineHeight + 2, SnellUi.ellipsize(c, "Jump to another server or world", r.right - 14 - tx), SnellPalette.text2)
-            SnellUi.icon(c, "chevron", r.right - 10, r.top + r.height / 2, 9, SnellPalette.menuText3)
+            c.drawText(tx, ty + c.lineHeight + 4, SnellUi.ellipsize(c, "Jump to another server or world", r.right - 14 - tx), SnellPalette.text2)
+            // Vector chevron: the sprite's ink-to-box ratio makes it near-invisible at this size.
+            SnellUi.chevronRight(c, r.right - 12, r.top + r.height / 2, 3, SnellPalette.text2)
         },
     )
 

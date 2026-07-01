@@ -75,7 +75,7 @@ object ServerView {
         children = listOf(
             squareIcon("back", "back", SnellPalette.text),
             Node(
-                width = Len.Flex(), height = Len.Fixed(40),
+                width = Len.Flex(), height = Len.Fixed(33), // content-tight so Cross.Center truly centres the ink
                 paint = { c, r, _, _ ->
                     SnellUi.heading(c, r.left, r.top, "Multiplayer", pixelHeight = 18, letterSpacingEm = 0.02f)
                     val n = s.rows.size
@@ -125,11 +125,19 @@ object ServerView {
         val tx = tile.right + 13
         val rx = r.right - 13
         val nameMaxW = (rx - 90) - tx
-        val ty = r.top + 11
-        c.drawText(tx, ty, SnellUi.ellipsize(c, row.name, nameMaxW), SnellPalette.text)
-        val sub = row.motd.ifEmpty { row.address }
-        c.drawText(tx, ty + c.lineHeight + 4, SnellUi.ellipsize(c, sub, nameMaxW), SnellPalette.text2)
-        c.drawMono(tx, ty + 2 * c.lineHeight + 8, SnellUi.ellipsize(c, row.address, nameMaxW), SnellPalette.menuText3)
+        // Optically centre the text block against the tile (+2: MC text ink rides high in its box).
+        // No MOTD -> a 2-line row (name + address); the 3-line form printed the address twice.
+        val ty: Int
+        if (row.motd.isNotEmpty()) {
+            ty = r.top + (r.height - (3 * c.lineHeight + 8)) / 2 + 2
+            c.drawText(tx, ty, SnellUi.ellipsize(c, row.name, nameMaxW), SnellPalette.text)
+            c.drawText(tx, ty + c.lineHeight + 4, SnellUi.ellipsize(c, row.motd, nameMaxW), SnellPalette.text2)
+            c.drawMono(tx, ty + 2 * c.lineHeight + 8, SnellUi.ellipsize(c, row.address, nameMaxW), SnellPalette.menuText3)
+        } else {
+            ty = r.top + (r.height - (2 * c.lineHeight + 4)) / 2 + 2
+            c.drawText(tx, ty, SnellUi.ellipsize(c, row.name, nameMaxW), SnellPalette.text)
+            c.drawMono(tx, ty + c.lineHeight + 4, SnellUi.ellipsize(c, row.address, nameMaxW), SnellPalette.menuText3)
+        }
 
         when (row.status) {
             ServerStatus.Online -> {
@@ -138,7 +146,8 @@ object ServerView {
                 drawBars(c, rx - 20, r.top + r.height - 14, pc, barsFor(row.ping))
                 if (row.ping >= 0) {
                     val pt = "${row.ping}ms"
-                    c.drawMono(rx - 24 - c.monoWidth(pt), r.top + r.height - 18, pt, pc)
+                    // -21 bottom-aligns the mono ink with the signal bars' baseline (at -18 it hung below).
+                    c.drawMono(rx - 24 - c.monoWidth(pt), r.top + r.height - 21, pt, pc)
                 }
             }
             ServerStatus.Offline -> rightPill(c, r, rx, "Offline", PillRole.Offline)
@@ -147,7 +156,7 @@ object ServerView {
     }
 
     private fun rightPill(c: EditorCanvas, r: Rect, rx: Int, text: String, role: PillRole) {
-        val pw = c.textWidth(text) + 16
+        val pw = c.textWidth(text) + 21 // must match SnellUi.pill's width
         SnellUi.pill(c, rx - pw, r.top + (r.height - (c.lineHeight + 6)) / 2, text, role)
     }
 
@@ -192,7 +201,7 @@ object ServerView {
         children = run {
             val hasSel = s.selected in s.rows.indices
             listOf(
-                footBtn("join", "Join Server", "play", SnellBtn.Primary, 130, hasSel),
+                footBtn("join", "Join Server", "play", SnellBtn.Primary, 115, hasSel), // ~19px side pads like the other primaries
                 footBtn("add", "Add Server", "add", SnellBtn.Secondary, 105, true),
                 footBtn("direct", "Direct Connect", "link", SnellBtn.Secondary, 125, true),
                 spacer(),

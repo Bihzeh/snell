@@ -8,6 +8,46 @@ import kotlin.test.assertTrue
 /** Pure-layout regression for the Node/Layout engine (no canvas; fixed metrics). */
 class NodeLayoutTest {
 
+    /** Minimal canvas that records [withClip] rects; every other member is a no-op. */
+    private class ClipRecordingCanvas : gg.snell.mod.platform.EditorCanvas {
+        val clips = mutableListOf<gg.snell.mod.editor.Rect>()
+        override fun withClip(x: Int, y: Int, w: Int, h: Int, body: () -> Unit) {
+            clips += gg.snell.mod.editor.Rect(x, y, w, h)
+            body()
+        }
+
+        override fun drawText(x: Int, y: Int, text: String, color: Int) {}
+        override fun drawStyledText(x: Int, y: Int, text: String, run: gg.snell.mod.platform.TextRun) {}
+        override fun fill(x: Int, y: Int, w: Int, h: Int, color: Int) {}
+        override fun withScale(scale: Float, pivotX: Int, pivotY: Int, body: () -> Unit) = body()
+        override fun textWidth(text: String) = text.length * 6
+        override fun drawMono(x: Int, y: Int, text: String, color: Int) {}
+        override fun monoWidth(text: String) = text.length * 6
+        override val lineHeight = 9
+        override val screenWidth = 200
+        override val screenHeight = 100
+        override fun border(x: Int, y: Int, w: Int, h: Int, color: Int) {}
+        override fun gradientV(x: Int, y: Int, w: Int, h: Int, top: Int, bottom: Int) {}
+        override fun overlayStratum() {}
+        override fun drawIcon(glyph: Char, x: Int, y: Int, color: Int) {}
+        override fun iconWidth(glyph: Char) = 8
+        override fun drawTexture(id: String, x: Int, y: Int, w: Int, h: Int) {}
+        override fun drawDisplay(x: Int, y: Int, text: String, color: Int) {}
+        override fun displayWidth(text: String) = text.length * 40
+        override fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int) {}
+    }
+
+    @Test fun `render wraps a clip node's children in withClip so overflow can't paint outside`() {
+        val c = ClipRecordingCanvas()
+        val list = Node(
+            id = "list", clip = true, width = Len.Fixed(100), height = Len.Fixed(50),
+            children = listOf(Node(width = Len.Fixed(10), height = Len.Fixed(10))),
+        )
+        val root = Node(dir = Dir.Stack, width = Len.Fixed(200), height = Len.Fixed(100), children = listOf(list)).laidOut(200, 100)
+        root.render(c, -1, -1)
+        assertEquals(listOf(list.rect), c.clips, "clip node scissors exactly its rect around its children")
+    }
+
     private object FixedMetrics : Metrics {
         override fun textWidth(s: String) = s.length * 6
         override fun monoWidth(s: String) = s.length * 6

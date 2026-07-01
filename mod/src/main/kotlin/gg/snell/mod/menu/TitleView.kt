@@ -91,13 +91,14 @@ object TitleView {
                     paint = { c, r, _, _ ->
                         // Centre the two-line block in the cell (+2 optical nudge; MC text ink rides high),
                         // instead of top-drawing it (which left the cell bottom empty -> top-heavy).
-                        val ty = r.top + (r.height - (c.lineHeight * 2 + 3)) / 2 + 2
+                        val ty = r.top + (r.height - (c.lineHeight * 2 + 4)) / 2 + 2
                         // Line 1: the title gets the full width (priority — never collapses to "…").
                         c.drawText(r.left, ty, SnellUi.ellipsize(c, "Link your Discord", r.width), SnellPalette.text)
-                        // Line 2: REWARDS badge then the subtitle in the remaining width.
-                        val by = ty + c.lineHeight + 3
+                        // Line 2: REWARDS badge then the subtitle in the remaining width (short enough
+                        // to fit the narrow command column without the ugly mid-list ellipsis).
+                        val by = ty + c.lineHeight + 4
                         val bw = SnellUi.badge(c, r.left, by - 1, "REWARDS", brand)
-                        c.drawText(r.left + bw + 6, by, SnellUi.ellipsize(c, "Free cosmetics, role perks & party sync", (r.width - bw - 6).coerceAtLeast(0)), SnellPalette.text2)
+                        c.drawText(r.left + bw + 6, by, SnellUi.ellipsize(c, "Free cosmetics & role perks", (r.width - bw - 6).coerceAtLeast(0)), SnellPalette.text2)
                     },
                 ),
                 Node( // compact Link CTA (chevron square) — keeps the title room in the narrow column
@@ -137,8 +138,14 @@ object TitleView {
     // avatar + username, so the row is 45 tall with the smaller controls centred against the chip.
     private fun topActions(d: TitleData) = Node(
         anchor = Anchor.TopRight, dir = Dir.Row, gap = 9, cross = Cross.Center, height = Len.Fixed(45),
+        offset = Point(0, -17), // mockup anchors the cluster 27 from the top; the root PAD gives 44
         children = listOf(
-            Node(id = "wallet", width = Len.Fixed(62), height = Len.Fixed(35), paint = { c, r, mx, my -> SnellUi.walletPill(c, r, d.crowns, r.contains(mx, my)) }),
+            Node(
+                id = "wallet", height = Len.Fixed(35),
+                // Hug the balance (10 pad · coin+gap 18 · value · 10 pad); floor keeps a short "0" pill-shaped.
+                measure = { m -> gg.snell.mod.editor.Size((28 + m.monoWidth(d.crowns)).coerceAtLeast(44), 35) },
+                paint = { c, r, mx, my -> SnellUi.walletPill(c, r, d.crowns, r.contains(mx, my)) },
+            ),
             squareAction("cosmetics"),
             squareAction("friends"),
             Node(
@@ -170,12 +177,13 @@ object TitleView {
         c.drawText(avatar.left + (avatar.width - c.textWidth(initial)) / 2, avatar.top + (avatar.height - c.lineHeight) / 2 + 1, initial, SnellPalette.accent)
         // Status dot on the avatar corner (mockup: 13px dot w/ dark ring at -3px → ×0.75), rounded
         // via the rrect 9-slice so it reads as a dot, not a square.
-        val cx = avatar.right - 2
-        val cy = avatar.bottom - 2
+        // -3 keeps the dark ring just inside the chip's bottom border (at -2 it bit through it).
+        val cx = avatar.right - 3
+        val cy = avatar.bottom - 3
         SnellUi.surface(c, Rect(cx - 7, cy - 7, 14, 14), SnellPalette.menuPanel)
         SnellUi.surface(c, Rect(cx - 5, cy - 5, 10, 10), SnellUi.statusColor(status))
         val tx = avatar.right + 8
-        c.drawText(tx, r.top + (r.height - c.lineHeight) / 2, SnellUi.ellipsize(c, username, r.right - 12 - tx), SnellPalette.text)
+        c.drawText(tx, r.top + (r.height - c.lineHeight) / 2 + 1, SnellUi.ellipsize(c, username, r.right - 12 - tx), SnellPalette.text)
     }
 
     // ---- bottom-right / bottom-left -----------------------------------------------------------
@@ -183,11 +191,15 @@ object TitleView {
         anchor = Anchor.BottomRight, width = Len.Frac(0.26f, 220, 320), height = Len.Fixed(66),
         paint = { c, r, _, _ ->
             SnellUi.surface(c, r, SnellPalette.withAlpha(SnellPalette.gold, 0x12), SnellPalette.withAlpha(SnellPalette.gold, 0x48))
-            SnellUi.dot(c, r.left + 12, r.top + 11, 7, SnellPalette.gold)
-            c.drawText(r.left + 20, r.top + 7, "WHAT'S NEW · ${d.modVersion}".uppercase(), SnellPalette.gold)
+            // Centre the eyebrow+body block in the card (it used to top-anchor, leaving a ~26px dead
+            // band under the text) and give the wrapped body lines a real 4px gap.
             val (l1, l2) = wrap2(c, d.whatsNew, r.width - 22)
-            c.drawText(r.left + 11, r.top + 7 + c.lineHeight + 5, l1, SnellPalette.text)
-            if (l2.isNotEmpty()) c.drawText(r.left + 11, r.top + 7 + 2 * c.lineHeight + 6, SnellUi.ellipsize(c, l2, r.width - 22), SnellPalette.text)
+            val block = c.lineHeight + 5 + c.lineHeight + (if (l2.isNotEmpty()) 4 + c.lineHeight else 0)
+            val y0 = r.top + (r.height - block) / 2 + 1
+            SnellUi.dot(c, r.left + 12, y0 + 4, 7, SnellPalette.gold)
+            c.drawText(r.left + 20, y0, "WHAT'S NEW · ${d.modVersion}".uppercase(), SnellPalette.gold)
+            c.drawText(r.left + 11, y0 + c.lineHeight + 5, l1, SnellPalette.text)
+            if (l2.isNotEmpty()) c.drawText(r.left + 11, y0 + 2 * c.lineHeight + 9, SnellUi.ellipsize(c, l2, r.width - 22), SnellPalette.text)
         },
     )
 

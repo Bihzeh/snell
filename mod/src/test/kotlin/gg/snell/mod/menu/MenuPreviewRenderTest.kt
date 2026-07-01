@@ -50,6 +50,12 @@ class MenuPreviewRenderTest {
             val t = AffineTransform(saved); t.translate(pivotX.toDouble(), pivotY.toDouble()); t.scale(scale.toDouble(), scale.toDouble())
             g.transform = t; try { body() } finally { g.transform = saved }
         }
+
+        override fun withClip(x: Int, y: Int, w: Int, h: Int, body: () -> Unit) {
+            val saved = g.clip
+            g.clip(java.awt.Rectangle(x, y, w, h)) // intersects + respects the current transform
+            try { body() } finally { g.clip = saved }
+        }
         override fun textWidth(text: String) = g.fontMetrics.stringWidth(text)
         override val lineHeight: Int get() = g.fontMetrics.height - 2
         override fun overlayStratum() {}
@@ -137,7 +143,7 @@ class MenuPreviewRenderTest {
     }
 
     @Test fun `render title screen`() {
-        val w = 640; val h = 360 // ≈ a real in-game GUI width (so the command column hits its 280px clamp)
+        val w = 1440; val h = 810 // the title's 810-tall design space (SnellTitleScreen.designH), 16:9 like in-game
         val (img, canvas) = frame(w, h)
         SnellUi.backdrop(canvas, w, h) // painted dusk — exactly what ships in-game
         val d = TitleData(

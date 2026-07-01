@@ -141,10 +141,15 @@ object Layout {
 
 // ---- tree walks (draw / hit-test / lookup) ------------------------------------------------------
 
-/** Paint this node then its children (children draw above the parent). Cursor is for hover only. */
+/** Paint this node then its children (children draw above the parent). Cursor is for hover only.
+ *  A [Node.clip] node scissors its children to its rect (lists: partial rows can't leak outside). */
 fun Node.render(c: EditorCanvas, mx: Int, my: Int) {
     paint?.draw(c, rect, mx, my)
-    for (k in kids()) k.render(c, mx, my)
+    if (clip) {
+        c.withClip(rect.left, rect.top, rect.width, rect.height) { for (k in kids()) k.render(c, mx, my) }
+    } else {
+        for (k in kids()) k.render(c, mx, my)
+    }
 }
 
 /** Id of the topmost node under the cursor (children tested first; [clip] nodes reject outside points). */

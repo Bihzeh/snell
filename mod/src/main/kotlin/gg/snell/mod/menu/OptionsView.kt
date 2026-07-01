@@ -47,7 +47,7 @@ object OptionsView {
 
     fun maxScroll(laid: Node, count: Int): Int {
         val list = laid.find("list") ?: return 0
-        return (contentHeight(count) - (list.rect.height - 2 * CONTENT_PAD_Y)).coerceAtLeast(0)
+        return (contentHeight(count) - (list.rect.height - ROW_GAP - CONTENT_PAD_Y)).coerceAtLeast(0)
     }
 
     private fun panel(s: OptionsState) = Node(
@@ -85,7 +85,7 @@ object OptionsView {
                 },
             ),
             Node(
-                width = Len.Flex(), height = Len.Fixed(20),
+                width = Len.Flex(), height = Len.Fixed(13), // ≈ the 18px heading's cap-ink height, so Cross.Center centres the ink
                 paint = { c, r, _, _ -> SnellUi.heading(c, r.left, r.top, "Options", pixelHeight = 18, letterSpacingEm = 0.02f) },
             ),
             Node(
@@ -113,7 +113,8 @@ object OptionsView {
                     val col = if (active) SnellPalette.text else SnellPalette.text2
                     SnellUi.icon(c, id, r.left + 16, r.top + r.height / 2, 14, col)
                     c.drawText(r.left + 28, r.top + (r.height - c.lineHeight) / 2 + 1, categoryLabels[id] ?: id, col)
-                    if (active) c.fill(r.left - 12, r.top + (r.height - 14) / 2, 2, 14, SnellPalette.accent)
+                    // (single active bar comes from SnellUi.categoryItem — a second hand-drawn one at
+                    // r.left-12 landed on the panel border and read as a detached stray)
                 },
             )
             if (id == "mods") {
@@ -125,26 +126,16 @@ object OptionsView {
     )
 
     // ---- content --------------------------------------------------------------------------------
-    /** The scrolling cell right of the rail: the lazy list + a bottom band masking row overflow. */
+    /** The scrolling cell right of the rail (clip=true scissors partial rows to the cell). */
     private fun contentCell(s: OptionsState) = Node(
-        dir = Dir.Stack, width = Len.Flex(), height = Len.Flex(),
-        children = listOf(
-            Node(
-                id = "list", width = Len.Flex(), height = Len.Flex(), clip = true,
-                padding = Edge(CONTENT_PAD_X, CONTENT_PAD_Y, CONTENT_PAD_X, CONTENT_PAD_Y),
-                lazy = Lazy(s.entries.size, ROW_H, ROW_GAP, s.scrollY) { i -> row(s, i) },
-                paint = { c, r, _, _ ->
-                    SnellUi.scrollbar(c, r.right - 8, r.top + CONTENT_PAD_Y, r.height - 2 * CONTENT_PAD_Y, contentHeight(s.entries.size), s.scrollY)
-                },
-            ),
-            // Mask must cover a full row stride: a partially-scrolled last row can extend up to
-            // ROW_H below the inner viewport (arrangeLazy includes any intersecting row), which is
-            // deeper than the 22px content padding alone.
-            Node(
-                anchor = Anchor.BottomLeft, width = Len.Flex(), height = Len.Fixed(ROW_H + ROW_GAP),
-                paint = { c, r, _, _ -> c.fill(r.left, r.top, r.width - 1, r.height - 1, SnellPalette.menuPanel) },
-            ),
-        ),
+        // Top pad is just the row gap: the first entry is a section eyebrow whose label bottom-anchors
+        // its 48px slot, so a full 22px pad stacked ~56px of dead air under the header rule.
+        id = "list", width = Len.Flex(), height = Len.Flex(), clip = true,
+        padding = Edge(CONTENT_PAD_X, ROW_GAP, CONTENT_PAD_X, CONTENT_PAD_Y),
+        lazy = Lazy(s.entries.size, ROW_H, ROW_GAP, s.scrollY) { i -> row(s, i) },
+        paint = { c, r, _, _ ->
+            SnellUi.scrollbar(c, r.right - 8, r.top + ROW_GAP, r.height - ROW_GAP - CONTENT_PAD_Y, contentHeight(s.entries.size), s.scrollY)
+        },
     )
 
     private fun row(s: OptionsState, i: Int): Node = when (val e = s.entries[i]) {

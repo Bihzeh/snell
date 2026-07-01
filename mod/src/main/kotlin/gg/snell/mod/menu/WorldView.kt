@@ -77,7 +77,7 @@ object WorldView {
         children = listOf(
             backButton(),
             Node(
-                width = Len.Flex(), height = Len.Fixed(40),
+                width = Len.Flex(), height = Len.Fixed(33), // content-tight so Cross.Center truly centres the ink
                 paint = { c, r, _, _ ->
                     SnellUi.heading(c, r.left, r.top, "Singleplayer", pixelHeight = 18, letterSpacingEm = 0.02f)
                     val n = s.rows.size
@@ -114,17 +114,19 @@ object WorldView {
         SnellUi.listRow(c, r, selected, hover)
         val ts = 56 // mockup 74 thumbnail
         val tile = Rect(r.left + 10, r.top + (r.height - ts) / 2, ts, ts)
-        c.fill(tile.left, tile.top, tile.width, tile.height, SnellPalette.withAlpha(SnellPalette.accent, 0x18))
-        c.border(tile.left, tile.top, tile.width, tile.height, SnellPalette.withAlpha(SnellPalette.accent, 0x44))
+        // 9-slice tile like the server rows (the old fill+border+corner-knock triple is deprecated),
+        // with the world-grid hairlines drawn over it.
+        SnellUi.iconTile(c, tile, SnellPalette.withAlpha(SnellPalette.accent, 0x18), SnellPalette.withAlpha(SnellPalette.accent, 0x44))
         c.fill(tile.left, tile.top + tile.height / 2, tile.width, 1, SnellPalette.withAlpha(SnellUi.WHITE, 0x10))
         c.fill(tile.left + tile.width / 2, tile.top, 1, tile.height, SnellPalette.withAlpha(SnellUi.WHITE, 0x10))
-        SnellUi.round(c, tile, SnellPalette.menuPanel)
 
         val tx = tile.right + 13
         if (selected) SnellUi.icon(c, "check", r.right - 18, r.top + r.height / 2, 14, SnellPalette.accent)
         val nameMaxW = (r.width * 0.42f).toInt()
         val name = SnellUi.ellipsize(c, world.name, nameMaxW)
-        val ty = r.top + 13
+        // Optically centre the 3-line block against the tile (+2: MC text ink rides high in its box).
+        val block = 3 * c.lineHeight + 8
+        val ty = r.top + (r.height - block) / 2 + 2
         c.drawText(tx, ty, name, SnellPalette.text)
         SnellUi.chip(c, tx + c.textWidth(name) + 8, ty - 1, world.mode, modeColor(world.mode))
         val textW = r.right - 26 - tx

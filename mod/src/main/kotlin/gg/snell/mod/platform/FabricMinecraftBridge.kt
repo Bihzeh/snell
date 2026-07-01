@@ -230,6 +230,13 @@ internal class EditorExtractorCanvas(
         extractor.outline(x, y, w, h, color)
     }
 
+    override fun withClip(x: Int, y: Int, w: Int, h: Int, body: () -> Unit) {
+        // enableScissor transforms the rect by the current pose (transformAxisAligned), so passing
+        // design-space coords under withScale is correct.
+        extractor.enableScissor(x, y, x + w, y + h)
+        try { body() } finally { extractor.disableScissor() }
+    }
+
     override fun gradientV(x: Int, y: Int, w: Int, h: Int, top: Int, bottom: Int) {
         extractor.fillGradient(x, y, x + w, y + h, top, bottom)
     }

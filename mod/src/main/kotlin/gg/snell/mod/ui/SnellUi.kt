@@ -258,9 +258,16 @@ object SnellUi {
         when (style) {
             SnellBtn.Primary -> {
                 if (enabled) canvas.fill(r.left + 2, r.bottom, r.width - 4, 2, SnellPalette.withAlpha(SnellPalette.accent, 0x55)) // glow
-                val face = if (!enabled) darken(SnellPalette.accent, 0.5f) else if (hover) lighten(SnellPalette.accent, 0.10f) else SnellPalette.accent
-                surface(canvas, r, face, lighten(SnellPalette.accent, 0.2f))
-                fg = if (enabled) SnellPalette.onAccent else SnellPalette.textDisabled
+                // Disabled: subtle wash + dim ring + readable muted label — must NOT out-shine the
+                // enabled siblings (the old full-bright ring made the dead CTA read as the active one).
+                if (!enabled) {
+                    surface(canvas, r, SnellPalette.accentSubtle, SnellPalette.withAlpha(SnellPalette.accent, 0x40))
+                    fg = SnellPalette.text2
+                } else {
+                    val face = if (hover) lighten(SnellPalette.accent, 0.10f) else SnellPalette.accent
+                    surface(canvas, r, face, lighten(SnellPalette.accent, 0.2f))
+                    fg = SnellPalette.onAccent
+                }
             }
             SnellBtn.Secondary -> {
                 surface(canvas, r, if (enabled && hover) rowFillHi else rowFill, rowBorder)
@@ -271,7 +278,8 @@ object SnellUi {
                 fg = if (enabled) SnellPalette.menuText3 else SnellPalette.textDisabled
             }
             SnellBtn.Danger -> {
-                surface(canvas, r, SnellPalette.withAlpha(SnellPalette.danger, if (enabled && hover) 0x26 else 0x14), SnellPalette.withAlpha(SnellPalette.danger, 0x40))
+                // Disabled ring dims with the label so a dead Delete doesn't out-shine live buttons.
+                surface(canvas, r, SnellPalette.withAlpha(SnellPalette.danger, if (enabled && hover) 0x26 else 0x14), SnellPalette.withAlpha(SnellPalette.danger, if (enabled) 0x40 else 0x22))
                 fg = if (enabled) SnellPalette.dangerSoft else SnellPalette.textDisabled
             }
         }
@@ -309,10 +317,12 @@ object SnellUi {
      */
     fun navButton(canvas: EditorCanvas, r: Rect, tileColor: Int, title: String, subtitle: String, hover: Boolean, accent: Boolean = true): Rect {
         surface(canvas, r, if (hover) (if (accent) SnellPalette.accentSubtle else rowFillHi) else rowFill, if (hover && accent) SnellPalette.withAlpha(SnellPalette.accent, 0x66) else rowBorder)
-        val tile = r.height - 12
-        val tileRect = Rect(r.left + 7, r.top + (r.height - tile) / 2, tile, tile)
+        // 40px tile at inset 15 / gap 13 — matches the featured Discord card so the stacked command
+        // column's tile edges and text columns align (they stair-stepped at height-derived sizes).
+        val tile = 40
+        val tileRect = Rect(r.left + 15, r.top + (r.height - tile) / 2, tile, tile)
         iconTile(canvas, tileRect, SnellPalette.withAlpha(tileColor, 0x22), SnellPalette.withAlpha(tileColor, 0x55))
-        val tx = tileRect.right + 9
+        val tx = tileRect.right + 13
         val block = canvas.lineHeight * 2 + 4
         // MC text ink rides in the upper part of its line box, so a purely geometric centre reads
         // top-heavy; nudge the two-line block down to optically centre it against the icon tile.
@@ -373,7 +383,7 @@ object SnellUi {
     fun walletPill(canvas: EditorCanvas, r: Rect, value: String, hover: Boolean = false) {
         capsule(canvas, r, SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x26 else 0x1A), SnellPalette.withAlpha(SnellPalette.gold, if (hover) 0x73 else 0x52))
         icon(canvas, "wallet", r.left + 10, r.top + r.height / 2, 11, SnellPalette.gold)
-        canvas.drawMono(r.left + 18, r.top + (r.height - canvas.lineHeight) / 2, value, SnellPalette.gold)
+        canvas.drawMono(r.left + 18, r.top + (r.height - canvas.lineHeight) / 2 + 1, value, SnellPalette.gold)
     }
 
     /**
@@ -411,11 +421,13 @@ object SnellUi {
 
     /** A 2-state pill toggle: cyan track + white knob when on, neutral inset when off. */
     fun switch(canvas: EditorCanvas, r: Rect, on: Boolean) {
-        val track = if (on) SnellPalette.accent else SnellPalette.menuInset
-        capsule(canvas, r, track, if (on) lighten(SnellPalette.accent, 0.2f) else rowBorder)
+        // Off state uses the mockup's explicit tokens (track #23202F / border #2A2740 / knob #6E6A88):
+        // menuInset + rowBorder composited to ~1:1 against the row fill, leaving only the knob visible.
+        val track = if (on) SnellPalette.accent else 0xFF23202F.toInt()
+        capsule(canvas, r, track, if (on) lighten(SnellPalette.accent, 0.2f) else 0xFF2A2740.toInt())
         val k = r.height - 4
         val kx = if (on) r.right - k - 2 else r.left + 2
-        capsule(canvas, Rect(kx, r.top + 2, k, k), if (on) WHITE else SnellPalette.text3)
+        capsule(canvas, Rect(kx, r.top + 2, k, k), if (on) WHITE else SnellPalette.menuText3)
     }
 
     /** A thin track + cyan fill to [fraction] + white knob, with [valueText] right-aligned in accent. */
@@ -467,12 +479,12 @@ object SnellUi {
             PillRole.Warning -> SnellPalette.ember
             PillRole.Neutral -> SnellPalette.menuText3
         }
-        val w = canvas.textWidth(text) + 16
+        val w = canvas.textWidth(text) + 21 // 13 left (dot) + 8 right pad — was 3 right, text hugged the edge
         val h = canvas.lineHeight + 6
         val r = Rect(x, y, w, h)
         capsule(canvas, r, SnellPalette.withAlpha(c, 0x22), SnellPalette.withAlpha(c, 0x55))
         dot(canvas, r.left + 8, r.top + h / 2, 4, c)
-        canvas.drawText(r.left + 13, r.top + (h - canvas.lineHeight) / 2, text, c)
+        canvas.drawText(r.left + 13, r.top + (h - canvas.lineHeight) / 2 + 1, text, c)
     }
 
     /** A compact tinted chip (mode pill, "Rewards" badge). Returns its width for layout. */
@@ -487,7 +499,7 @@ object SnellUi {
     /** A keybinding cap (mono-ish boxed key). */
     fun keyCap(canvas: EditorCanvas, r: Rect, text: String) {
         surfaceSm(canvas, r, rowFillHi, rowBorder)
-        canvas.drawMono(r.left + (r.width - canvas.monoWidth(text)) / 2, r.top + (r.height - canvas.lineHeight) / 2, text, SnellPalette.text2)
+        canvas.drawMono(r.left + (r.width - canvas.monoWidth(text)) / 2, r.top + (r.height - canvas.lineHeight) / 2 + 1, text, SnellPalette.text2)
     }
 
     /** Text input chrome: inset field, accent border when focused, placeholder/caret. */

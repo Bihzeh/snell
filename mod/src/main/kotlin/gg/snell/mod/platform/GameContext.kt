@@ -82,4 +82,11 @@ interface EditorCanvas : HudCanvas {
      * / tile / stretch is chosen by the sprite's `.png.mcmeta` (`gui.scaling`); no mcmeta = stretch.
      */
     fun sprite(id: String, x: Int, y: Int, w: Int, h: Int, tint: Int = 0xFFFFFFFF.toInt())
+
+    /**
+     * Clip [body]'s drawing to the box (current-transform coordinates, i.e. design space in the menus).
+     * Backed by the extractor scissor in-game and Java2D clip in the AWT preview; canvases that can't
+     * clip may run [body] unclipped (drawing then relies on band masks).
+     */
+    fun withClip(x: Int, y: Int, w: Int, h: Int, body: () -> Unit) = body()
 }
