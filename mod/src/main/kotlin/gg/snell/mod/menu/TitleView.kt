@@ -47,7 +47,8 @@ object TitleView {
     // ---- left command column ------------------------------------------------------------------
     private fun commandColumn(d: TitleData) = Node(
         anchor = Anchor.TopLeft, width = Len.Fixed(360), height = Len.Flex(),
-        dir = Dir.Column, cross = Cross.Stretch, gap = 10,
+        // Reserve a bottom band so the Options/Quit row clears the anchored version footer.
+        dir = Dir.Column, cross = Cross.Stretch, gap = 10, padding = Edge(b = 18),
         children = listOf(
             wordmark(),
             spacer(),
