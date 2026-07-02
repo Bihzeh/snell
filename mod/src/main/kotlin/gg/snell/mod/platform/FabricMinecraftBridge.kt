@@ -1,20 +1,24 @@
 package gg.snell.mod.platform
 
+import gg.snell.mod.menu.SnellButtonAction
+import gg.snell.mod.menu.SnellButtons
 import gg.snell.mod.module.ModuleManager
-import gg.snell.mod.platform.screens.SnellPauseScreen
-import gg.snell.mod.platform.screens.SnellTitleScreen
 import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
+import net.fabricmc.fabric.api.client.screen.v1.Screens
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType
 import net.fabricmc.loader.api.FabricLoader
+import gg.snell.shared.Brand
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.components.Button
+import net.minecraft.util.Util
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.PauseScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -65,17 +69,25 @@ class FabricMinecraftBridge : MinecraftBridge {
         Minecraft.getInstance().setScreenAndShow(SnellHudEditorScreen(modules, ::sampleContext))
     }
 
-    override fun installMenuOverhaul(enabled: () -> Boolean) {
-        // Fire whenever any screen finishes initializing and, if it's a vanilla menu we re-skin,
-        // replace it with the Snell version. Our screens don't extend the vanilla types, so the
-        // replacement's own init never re-triggers a swap.
+    override fun installMenuButtons(enabled: () -> Boolean, openEditor: () -> Unit) {
+        // Add plain vanilla Buttons to the untouched title/pause screens (Fabric Screens API; the
+        // widget list is mutable after init). Layout is the pure SnellButtons cluster; actions map
+        // to the HUD editor and the web (cosmetics are equipped out-of-band per ADR-0007).
         ScreenEvents.AFTER_INIT.register(
-            ScreenEvents.AfterInit { client, screen, _, _ ->
+            ScreenEvents.AfterInit { _, screen, scaledWidth, scaledHeight ->
                 if (!enabled()) return@AfterInit
-                when (screen) {
-                    is TitleScreen -> client.setScreenAndShow(SnellTitleScreen())
-                    is PauseScreen -> client.setScreenAndShow(SnellPauseScreen())
-                    else -> {}
+                if (screen !is TitleScreen && screen !is PauseScreen) return@AfterInit
+                val font = Screens.getFont(screen)
+                for (spec in SnellButtons.cluster(scaledWidth, scaledHeight, font::width)) {
+                    Screens.getWidgets(screen).add(
+                        Button.builder(Component.literal(spec.label)) {
+                            when (spec.action) {
+                                SnellButtonAction.HudEditor -> openEditor()
+                                SnellButtonAction.Discord -> Util.getPlatform().openUri(Brand.DISCORD_URL)
+                                SnellButtonAction.Cosmetics -> Util.getPlatform().openUri(Brand.COSMETICS_URL)
+                            }
+                        }.bounds(spec.rect.left, spec.rect.top, spec.rect.width, spec.rect.height).build(),
+                    )
                 }
             },
         )

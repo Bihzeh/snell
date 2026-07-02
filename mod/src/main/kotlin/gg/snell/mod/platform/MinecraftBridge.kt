@@ -20,8 +20,12 @@ interface MinecraftBridge {
     /** Open the in-game HUD editor (drag/show-hide/style) for the given modules. */
     fun openHudEditor(modules: ModuleManager)
 
-    /** Replace vanilla menus with the bespoke Snell screens while [enabled] returns true. */
-    fun installMenuOverhaul(enabled: () -> Boolean)
+    /**
+     * Add the Snell buttons (HUD Editor / Discord / Cosmetics) to the VANILLA title + pause screens
+     * while [enabled] returns true. The vanilla screens themselves are untouched — no replacement,
+     * no re-skin; Snell stays a lightweight overlay on the authentic Minecraft menus.
+     */
+    fun installMenuButtons(enabled: () -> Boolean, openEditor: () -> Unit)
 
     /** Register the bundled Geist font resource pack as an available (not-yet-applied) pack. */
     fun registerFontPack()

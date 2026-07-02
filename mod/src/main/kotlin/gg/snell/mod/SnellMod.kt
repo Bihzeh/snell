@@ -28,7 +28,6 @@ class SnellMod : ClientModInitializer {
         bridge.registerFontPack() // register the pack source only (no reload during init)
 
         val config = Config(bridge.configDir()).apply { load() }
-        gg.snell.mod.platform.SnellMenus.enabled = config.isMenusEnabled() // bespoke in-game menus (mixin reads this)
         val modules = ModuleManager(config)
 
         modules.register(FontModule())
@@ -51,8 +50,9 @@ class SnellMod : ClientModInitializer {
         // Right-Shift opens the HUD editor directly (its "Modules" button browses/toggles everything).
         bridge.installMenuKeybind { bridge.openHudEditor(modules) }
 
-        // Swap vanilla title/pause (and, later, the pickers) for the bespoke Snell screens.
-        bridge.installMenuOverhaul { gg.snell.mod.platform.SnellMenus.enabled }
+        // Snell buttons (HUD Editor / Discord / Cosmetics) on the untouched vanilla title/pause —
+        // the client keeps the authentic Minecraft menus instead of the old bespoke re-skins.
+        bridge.installMenuButtons({ config.isMenusEnabled() }, { bridge.openHudEditor(modules) })
 
         // Apply the persisted font choice after the first client tick (never reload during init).
         bridge.applyCustomFontOnStartup(modules.byId("font")?.enabled ?: true)
